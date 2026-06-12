@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#120d1d">
+<title>PIPES — Vocal Range Finder</title>
+<style>
+  :root {
+    --bg: #120d1d;
+    --bg2: #1b1430;
+    --card: #221a38;
+    --card-edge: rgba(255,255,255,0.08);
+    --gold: #ffc857;
+    --gold-soft: rgba(255,200,87,0.18);
+    --rose: #ff7eb6;
+    --teal: #5eead4;
+    --text: #f0eaf7;
+    --muted: #9b8fb5;
+    --good: #4ade80;
+    --bad: #ff8585;
+    --comfy: #ffc857;
+    --full: #7c6fd0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { min-height: 100%; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 480px at 50% -10%, rgba(255,200,87,0.10), transparent 60%),
+      radial-gradient(700px 500px at 85% 110%, rgba(255,126,182,0.08), transparent 55%),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 18px 14px calc(28px + env(safe-area-inset-bottom));
+    user-select: none;
+  }
+  .app { width: 100%; max-width: 460px; }
+
+  /* ============ HEADER ============ */
+  header { text-align: center; margin-bottom: 14px; }
+  .logo {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 6px;
+    color: var(--gold);
+    text-shadow: 0 0 24px rgba(255,200,87,0.35);
+  }
+  .logo .mic-ico { font-size: 1.6rem; margin-right: 6px; }
+  .tagline { font-size: 0.72rem; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+
+  /* ============ TABS ============ */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 14px;
+    padding: 5px;
+    margin-bottom: 16px;
+  }
+  .tab-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 11px 6px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .tab-btn.active {
+    background: linear-gradient(180deg, rgba(255,200,87,0.22), rgba(255,200,87,0.10));
+    color: var(--gold);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ============ CARDS ============ */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    border-radius: 18px;
+    padding: 18px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+  }
+  .card h2 { font-size: 1.05rem; margin-bottom: 8px; color: var(--gold); }
+  .card p { font-size: 0.92rem; line-height: 1.55; color: var(--text); }
+  .card .sub { color: var(--muted); font-size: 0.82rem; line-height: 1.5; }
+
+  /* ============ BIG BUTTONS ============ */
+  .big-btn {
+    display: block;
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    color: #2a1c00;
+    background: linear-gradient(180deg, #ffd97a, var(--gold) 60%, #eaa93c);
+    box-shadow: 0 6px 18px rgba(255,200,87,0.3), inset 0 1px 0 rgba(255,255,255,0.5);
+    transition: transform 0.08s, filter 0.15s;
+  }
+  .big-btn:active { transform: translateY(2px); }
+  .big-btn.secondary {
+    background: linear-gradient(180deg, #3a2f5c, #2c2348);
+    color: var(--text);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .btn-row { display: flex; gap: 10px; margin-top: 12px; }
+  .btn-row .big-btn { flex: 1; }
+
+  /* ============ TEST SCREEN ============ */
+  .step-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
+  .step-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: rgba(255,255,255,0.14);
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .step-dot.done { background: var(--good); }
+  .step-dot.now { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+
+  .step-title { text-align: center; font-size: 1.25rem; font-weight: 800; margin-bottom: 6px; }
+  .step-instr { text-align: center; font-size: 0.95rem; line-height: 1.55; color: var(--muted); min-height: 3.1em; margin-bottom: 14px; }
+
+  /* note display + progress ring */
+  .sing-zone { display: flex; flex-direction: column; align-items: center; margin-bottom: 8px; }
+  .ring-wrap { position: relative; width: 168px; height: 168px; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: rgba(255,255,255,0.09); stroke-width: 9; }
+  .ring-fg {
+    fill: none; stroke: var(--gold); stroke-width: 9; stroke-linecap: round;
+    filter: drop-shadow(0 0 6px rgba(255,200,87,0.6));
+    transition: stroke-dashoffset 0.1s linear;
+  }
+  .ring-note {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .ring-note .big-note { font-size: 3rem; font-weight: 800; line-height: 1; color: var(--text); }
+  .ring-note .big-note.captured { color: var(--good); text-shadow: 0 0 18px rgba(74,222,128,0.5); }
+  .ring-note .hz { font-size: 0.75rem; color: var(--muted); margin-top: 4px; min-height: 1em; }
+  .hold-hint { text-align: center; font-size: 0.82rem; color: var(--muted); min-height: 1.4em; margin-top: 8px; }
+  .hold-hint.good { color: var(--good); font-weight: 700; }
+
+  /* ============ PIANO KEYBOARD ============ */
+  .kb-scroll { overflow-x: auto; padding: 6px 2px 4px; -webkit-overflow-scrolling: touch; }
+  .kb { position: relative; height: 96px; }
+  .kb .wk {
+    position: absolute; top: 0;
+    width: 26px; height: 96px;
+    background: linear-gradient(180deg, #f4f0fa, #d9d2e8);
+    border: 1px solid #2a2342;
+    border-radius: 0 0 4px 4px;
+  }
+  .kb .bk {
+    position: absolute; top: 0;
+    width: 16px; height: 58px;
+    background: linear-gradient(180deg, #2c2740, #100c1c);
+    border: 1px solid #000;
+    border-radius: 0 0 3px 3px;
+    z-index: 2;
+  }
+  .kb .wk.in-full { background: linear-gradient(180deg, #b6aaf0, var(--full)); }
+  .kb .bk.in-full { background: linear-gradient(180deg, #6d5fc4, #4a3e96); }
+  .kb .wk.in-comfy { background: linear-gradient(180deg, #ffe3a3, var(--comfy)); }
+  .kb .bk.in-comfy { background: linear-gradient(180deg, #e8b34a, #c08c1e); }
+  .kb .wk.live, .kb .bk.live {
+    background: var(--rose) !important;
+    box-shadow: 0 0 12px var(--rose);
+  }
+  .kb .wk .klbl {
+    position: absolute; bottom: 3px; left: 0; right: 0;
+    text-align: center; font-size: 0.5rem; font-weight: 700; color: #5a4f78;
+  }
+  .kb-legend { display: flex; gap: 14px; justify-content: center; font-size: 0.72rem; color: var(--muted); margin-top: 8px; flex-wrap: wrap; }
+  .kb-legend .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+  /* ============ RESULTS ============ */
+  .result-lines { margin: 4px 0 12px; }
+  .result-line {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 10px 4px;
+    border-bottom: 1px dashed rgba(255,255,255,0.1);
+    font-size: 0.95rem;
+  }
+  .result-line:last-child { border-bottom: none; }
+  .result-line .lbl { color: var(--muted); }
+  .result-line .val { font-weight: 800; font-size: 1.1rem; color: var(--text); }
+  .result-line .val.gold { color: var(--gold); }
+  .voice-type-box {
+    text-align: center;
+    background: var(--gold-soft);
+    border: 1px solid rgba(255,200,87,0.35);
+    border-radius: 14px;
+    padding: 14px 12px;
+    margin-bottom: 12px;
+  }
+  .voice-type-box .vt-name { font-size: 1.5rem; font-weight: 800; color: var(--gold); }
+  .voice-type-box .vt-blurb { font-size: 0.85rem; color: var(--text); margin-top: 4px; line-height: 1.5; }
+  .voice-type-box .vt-famous { font-size: 0.78rem; color: var(--muted); margin-top: 6px; }
+  .redo-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .redo-links button {
+    flex: 1 1 45%;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.22);
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 0.78rem;
+    padding: 9px 6px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .redo-links button b { color: var(--text); }
+
+  /* ============ EXERCISES ============ */
+  .ex-card { position: relative; }
+  .ex-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .ex-emoji { font-size: 1.6rem; }
+  .ex-head h3 { font-size: 1rem; color: var(--text); }
+  .ex-head .ex-tag { font-size: 0.62rem; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); background: var(--gold-soft); border-radius: 6px; padding: 3px 7px; margin-left: auto; white-space: nowrap; }
+  .ex-card p { font-size: 0.86rem; color: var(--muted); line-height: 1.55; }
+  .ex-controls { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .play-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 11px 18px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 800;
+    cursor: pointer;
+    color: #2a1c00;
+    background: linear-gradient(180deg, #ffd97a, var(--gold) 60%, #eaa93c);
+    box-shadow: 0 4px 12px rgba(255,200,87,0.25);
+    min-width: 96px;
+  }
+  .play-btn:active { transform: translateY(1px); }
+  .play-btn.playing { background: linear-gradient(180deg, #ff9ec9, var(--rose) 60%, #d65a92); color: #3d0a24; }
+  .step-knob {
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(0,0,0,0.25);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 1.1rem;
+    font-weight: 800;
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .step-knob:active { transform: translateY(1px); }
+  .ex-note-readout { margin-left: auto; text-align: right; }
+  .ex-note-readout .cur { font-size: 1.05rem; font-weight: 800; color: var(--gold); min-width: 52px; display: inline-block; }
+  .ex-note-readout .lbl { display: block; font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .ex-hint { font-size: 0.74rem; color: var(--teal); margin-top: 8px; min-height: 1.2em; }
+
+  .range-banner {
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--muted);
+    background: rgba(0,0,0,0.25);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .range-banner b { color: var(--gold); }
+
+  .status { text-align: center; font-size: 0.8rem; line-height: 1.5; color: var(--muted); min-height: 2.2em; margin-top: 4px; }
+  .status.error { color: var(--bad); }
+
+  footer { margin-top: 18px; font-size: 0.62rem; color: var(--muted); opacity: 0.6; letter-spacing: 1px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="logo"><span class="mic-ico">🎤</span>PIPES</div>
+    <div class="tagline">Vocal Range Finder &amp; Warm-Ups</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tabRange">🎯 Find My Range</button>
+    <button class="tab-btn" id="tabWarmup">🔥 Warm-Ups</button>
+  </div>
+
+  <!-- ================= RANGE PANEL ================= -->
+  <div class="panel active" id="panelRange">
+
+    <!-- intro screen -->
+    <div id="screenIntro">
+      <div class="card">
+        <h2>How it works</h2>
+        <p>You'll sing <b>4 notes</b> — a comfy low, your lowest, a comfy high, and your highest. Hold each one steady for about a second and the app catches it automatically.</p>
+        <p class="sub" style="margin-top:8px;">🎧 Best in a quiet room. Your voice never leaves this device — nothing is recorded or sent anywhere.</p>
+      </div>
+      <button class="big-btn" id="startTestBtn">🎙️ Start the Test</button>
+      <div class="status" id="introStatus"></div>
+      <div id="savedResultWrap"></div>
+    </div>
+
+    <!-- test screen -->
+    <div id="screenTest" style="display:none;">
+      <div class="step-dots" id="stepDots"></div>
+      <div class="card">
+        <div class="step-title" id="stepTitle"></div>
+        <div class="step-instr" id="stepInstr"></div>
+        <div class="sing-zone">
+          <div class="ring-wrap">
+            <svg width="168" height="168" viewBox="0 0 168 168">
+              <circle class="ring-bg" cx="84" cy="84" r="76"></circle>
+              <circle class="ring-fg" id="ringFg" cx="84" cy="84" r="76"
+                      stroke-dasharray="477.5" stroke-dashoffset="477.5"></circle>
+            </svg>
+            <div class="ring-note">
+              <div class="big-note" id="liveNote">—</div>
+              <div class="hz" id="liveHz"></div>
+            </div>
+          </div>
+          <div class="hold-hint" id="holdHint">Listening…</div>
+        </div>
+        <div class="kb-scroll" id="kbLiveScroll"><div class="kb" id="kbLive"></div></div>
+      </div>
+      <div class="btn-row" id="capturedBtns" style="display:none;">
+        <button class="big-btn secondary" id="redoStepBtn">↺ Redo</button>
+        <button class="big-btn" id="nextStepBtn">Next →</button>
+      </div>
+      <button class="big-btn secondary" id="cancelTestBtn" style="margin-top:12px;">✖ Cancel test</button>
+      <div class="status" id="testStatus"></div>
+    </div>
+
+    <!-- results screen -->
+    <div id="screenResults" style="display:none;">
+      <div class="card">
+        <h2>🏆 Your Results</h2>
+        <div class="result-lines">
+          <div class="result-line"><span class="lbl">Your full range</span><span class="val" id="resFull">—</span></div>
+          <div class="result-line"><span class="lbl">Comfortable range</span><span class="val gold" id="resComfy">—</span></div>
+          <div class="result-line"><span class="lbl">Range size</span><span class="val" id="resSpan">—</span></div>
+        </div>
+        <div class="voice-type-box">
+          <div style="font-size:0.68rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted);">Voice type estimate</div>
+          <div class="vt-name" id="resVoice">—</div>
+          <div class="vt-blurb" id="resBlurb"></div>
+          <div class="vt-famous" id="resFamous"></div>
+        </div>
+        <div class="kb-scroll" id="kbResScroll"><div class="kb" id="kbRes"></div></div>
+        <div class="kb-legend">
+          <span><span class="swatch" style="background:var(--comfy);"></span>Comfortable</span>
+          <span><span class="swatch" style="background:var(--full);"></span>Full range</span>
+        </div>
+        <div class="redo-links" id="redoLinks"></div>
+      </div>
+      <div class="btn-row">
+        <button class="big-btn secondary" id="retestBtn">↺ Test Again</button>
+        <button class="big-btn" id="goWarmupBtn">🔥 Warm Up</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= WARM-UP PANEL ================= -->
+  <div class="panel" id="panelWarmup">
+    <div class="range-banner" id="warmupBanner">
+      Do the range test first and these exercises will automatically fit <b>your</b> voice.
+    </div>
+    <div id="exerciseList"></div>
+  </div>
+
+  <footer>PIPES · VOCAL RANGE FINDER<br>Developed by Julio Diaz</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ================= music math =================
+  var NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  var A4 = 440;
+
+  function freqToMidiFloat(freq) { return 69 + 12 * Math.log(freq / A4) / Math.LN2; }
+  function midiToFreq(midi) { return A4 * Math.pow(2, (midi - 69) / 12); }
+  function midiToName(midi) {
+    var idx = ((midi % 12) + 12) % 12;
+    return NOTE_NAMES[idx] + (Math.floor(midi / 12) - 1);
+  }
+  function median(arr) {
+    var s = arr.slice().sort(function (a, b) { return a - b; });
+    return s[Math.floor(s.length / 2)];
+  }
+
+  // ================= pitch detection =================
+  // Autocorrelation (ACF2+) with parabolic interpolation — same engine as Resonote 440.
+  function detectPitch(buf, sampleRate) {
+    var SIZE = buf.length;
+    var rms = 0, peak = 0;
+    for (var i = 0; i < SIZE; i++) {
+      rms += buf[i] * buf[i];
+      var v = Math.abs(buf[i]);
+      if (v > peak) peak = v;
+    }
+    rms = Math.sqrt(rms / SIZE);
+    if (rms < 0.006) return -1;
+
+    var thres = peak * 0.3, r1 = 0, r2 = SIZE - 1;
+    for (i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; } else break;
+    for (i = 1; i < SIZE / 2; i++) if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; } else break;
+    var sliced = buf.slice(r1, r2);
+    SIZE = sliced.length;
+    if (SIZE < 64) return -1;
+
+    var c = new Float32Array(SIZE);
+    for (i = 0; i < SIZE; i++)
+      for (var j = 0; j < SIZE - i; j++)
+        c[i] += sliced[j] * sliced[j + i];
+
+    var d = 0;
+    while (d + 1 < SIZE && c[d] > c[d + 1]) d++;
+    var maxval = -1, maxpos = -1;
+    for (i = d; i < SIZE; i++) {
+      if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
+    }
+    var T0 = maxpos;
+    if (T0 <= 0) return -1;
+
+    var x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
+    if (x1 !== undefined && x3 !== undefined) {
+      var a = (x1 + x3 - 2 * x2) / 2;
+      var b = (x3 - x1) / 2;
+      if (a) T0 = T0 - b / (2 * a);
+    }
+    return sampleRate / T0;
+  }
+
+  // ================= hold detector =================
+  // Captures a note once the singer holds a steady pitch for HOLD_MS.
+  function HoldDetector(holdMs, tolSemitones) {
+    this.holdMs = holdMs || 1200;
+    this.tol = tolSemitones || 0.9;
+    this.maxGapMs = 350;
+    this.samples = [];
+    this.lastT = -1;
+  }
+  HoldDetector.prototype.reset = function () { this.samples = []; this.lastT = -1; };
+  HoldDetector.prototype.feed = function (midiFloat, t) {
+    if (midiFloat == null) {
+      if (this.lastT >= 0 && t - this.lastT > this.maxGapMs) this.reset();
+      return { progress: this.samples.length ? Math.min(1, (this.lastT - this.samples[0].t) / this.holdMs) : 0 };
+    }
+    if (this.lastT >= 0 && t - this.lastT > this.maxGapMs) this.samples = [];
+    this.lastT = t;
+    var s = this.samples;
+    if (s.length) {
+      var med = median(s.map(function (x) { return x.m; }));
+      if (Math.abs(midiFloat - med) > this.tol) s.length = 0;
+    }
+    s.push({ t: t, m: midiFloat });
+    var span = t - s[0].t;
+    var progress = Math.min(1, span / this.holdMs);
+    if (progress >= 1 && s.length >= 10) {
+      var m = Math.round(median(s.map(function (x) { return x.m; })));
+      this.reset();
+      return { progress: 1, captured: m };
+    }
+    return { progress: progress };
+  };
+
+  // ================= voice classification =================
+  var VOICE_TYPES = [
+    { name: "Bass",          lo: 40, hi: 64, blurb: "The deepest voice type — rich, dark and rumbling.", famous: "Like Barry White or Johnny Cash's low end" },
+    { name: "Baritone",      lo: 43, hi: 65, blurb: "The most common male voice — warm and strong in the middle.", famous: "Like Elvis Presley or John Legend" },
+    { name: "Tenor",         lo: 48, hi: 71, blurb: "The higher male voice — bright and ringing on top.", famous: "Like Freddie Mercury or Bruno Mars" },
+    { name: "Alto",          lo: 53, hi: 77, blurb: "The deeper female voice — warm, velvety low notes.", famous: "Like Amy Winehouse or Cher" },
+    { name: "Mezzo-Soprano", lo: 57, hi: 81, blurb: "The most common female voice — powerful middle register.", famous: "Like Adele or Beyoncé" },
+    { name: "Soprano",       lo: 60, hi: 84, blurb: "The highest voice type — soaring, brilliant top notes.", famous: "Like Mariah Carey or Ariana Grande" }
+  ];
+  function classifyVoice(loMidi, hiMidi) {
+    var best = null, bestScore = -1, second = null, secondScore = -1;
+    for (var i = 0; i < VOICE_TYPES.length; i++) {
+      var vt = VOICE_TYPES[i];
+      var inter = Math.min(hiMidi, vt.hi) - Math.max(loMidi, vt.lo);
+      if (inter < 0) inter = 0;
+      var union = Math.max(hiMidi, vt.hi) - Math.min(loMidi, vt.lo);
+      var score = union > 0 ? inter / union : 0;
+      if (score > bestScore) { second = best; secondScore = bestScore; best = vt; bestScore = score; }
+      else if (score > secondScore) { second = vt; secondScore = score; }
+    }
+    return { primary: best, secondary: (second && bestScore - secondScore < 0.08) ? second : null };
+  }
+
+  // ================= keyboard widget =================
+  var KB_LO = 33, KB_HI = 86; // A1 .. D6
+  var WK_W = 26, BK_W = 16;
+  function isWhite(midi) { return [0, 2, 4, 5, 7, 9, 11].indexOf(((midi % 12) + 12) % 12) >= 0; }
+  function buildKeyboard(container) {
+    var keys = {};
+    var whiteCount = 0;
+    for (var m = KB_LO; m <= KB_HI; m++) {
+      var el = document.createElement("div");
+      if (isWhite(m)) {
+        el.className = "wk";
+        el.style.left = (whiteCount * WK_W) + "px";
+        var name = midiToName(m);
+        if (name.indexOf("C") === 0) {
+          var lbl = document.createElement("span");
+          lbl.className = "klbl";
+          lbl.textContent = name;
+          el.appendChild(lbl);
+        }
+        whiteCount++;
+      } else {
+        el.className = "bk";
+        el.style.left = (whiteCount * WK_W - BK_W / 2) + "px";
+      }
+      container.appendChild(el);
+      keys[m] = el;
+    }
+    container.style.width = (whiteCount * WK_W) + "px";
+    var liveKey = null;
+    return {
+      keys: keys,
+      setLive: function (midi) {
+        if (liveKey) liveKey.classList.remove("live");
+        liveKey = keys[midi] || null;
+        if (liveKey) liveKey.classList.add("live");
+      },
+      paintRange: function (fullLo, fullHi, comfyLo, comfyHi) {
+        for (var m = KB_LO; m <= KB_HI; m++) {
+          keys[m].classList.remove("in-full", "in-comfy");
+          if (m >= comfyLo && m <= comfyHi) keys[m].classList.add("in-comfy");
+          else if (m >= fullLo && m <= fullHi) keys[m].classList.add("in-full");
+        }
+      },
+      scrollTo: function (scrollEl, midi) {
+        var el = keys[Math.round(midi)];
+        if (el) scrollEl.scrollLeft = Math.max(0, el.offsetLeft - scrollEl.clientWidth / 2);
+      }
+    };
+  }
+
+  // ================= DOM =================
+  var $ = function (id) { return document.getElementById(id); };
+  var screenIntro = $("screenIntro"), screenTest = $("screenTest"), screenResults = $("screenResults");
+  var stepDotsEl = $("stepDots"), stepTitleEl = $("stepTitle"), stepInstrEl = $("stepInstr");
+  var liveNoteEl = $("liveNote"), liveHzEl = $("liveHz"), holdHintEl = $("holdHint"), ringFg = $("ringFg");
+  var capturedBtns = $("capturedBtns"), testStatusEl = $("testStatus"), introStatusEl = $("introStatus");
+  var RING_LEN = 477.5;
+
+  var kbLive = buildKeyboard($("kbLive"));
+  var kbRes = buildKeyboard($("kbRes"));
+
+  // ================= tabs =================
+  var tabRange = $("tabRange"), tabWarmup = $("tabWarmup");
+  var panelRange = $("panelRange"), panelWarmup = $("panelWarmup");
+  function showTab(which) {
+    var range = which === "range";
+    tabRange.classList.toggle("active", range);
+    tabWarmup.classList.toggle("active", !range);
+    panelRange.classList.toggle("active", range);
+    panelWarmup.classList.toggle("active", !range);
+    if (!range) stopMic(); // mic isn't needed on the warm-up tab
+  }
+  tabRange.addEventListener("click", function () { showTab("range"); });
+  tabWarmup.addEventListener("click", function () { showTab("warmup"); });
+
+  // ================= test flow =================
+  var STEPS = [
+    { key: "comfLow",  title: "1 · Low & easy 😌",    instr: "Sing a LOW note that feels totally easy — a relaxed “ahh”. Hold it steady until the ring fills up." },
+    { key: "extLow",   title: "2 · Your lowest 🐻",   instr: "Now slide DOWN as low as your voice can go without croaking. Hold the lowest note you can still sing clearly." },
+    { key: "comfHigh", title: "3 · High & easy 😊",   instr: "Sing a HIGH note that still feels comfortable — no straining, no pushing. Hold it steady." },
+    { key: "extHigh",  title: "4 · Your highest 🚀",  instr: "Go as HIGH as you can! It's fine to flip into a light, airy voice (falsetto). Hold your top note." }
+  ];
+  var captured = {};   // key -> midi
+  var stepIdx = 0;
+  var awaitingNext = false;
+  var redoMode = false; // true when re-doing a single step from the results screen
+  var holdDet = new HoldDetector(1200, 0.9);
+  var STORE_KEY = "pipes-range-v1";
+
+  // step dots
+  STEPS.forEach(function () {
+    var d = document.createElement("div");
+    d.className = "step-dot";
+    stepDotsEl.appendChild(d);
+  });
+  function renderDots() {
+    for (var i = 0; i < STEPS.length; i++) {
+      var d = stepDotsEl.children[i];
+      d.className = "step-dot" + (i < stepIdx || captured[STEPS[i].key] != null && i !== stepIdx ? " done" : "") + (i === stepIdx ? " now" : "");
+    }
+  }
+
+  function showScreen(which) {
+    screenIntro.style.display = which === "intro" ? "" : "none";
+    screenTest.style.display = which === "test" ? "" : "none";
+    screenResults.style.display = which === "results" ? "" : "none";
+  }
+
+  function beginStep(i) {
+    stepIdx = i;
+    awaitingNext = false;
+    holdDet.reset();
+    capturedBtns.style.display = "none";
+    stepTitleEl.textContent = STEPS[i].title;
+    stepInstrEl.textContent = STEPS[i].instr;
+    liveNoteEl.textContent = "—";
+    liveNoteEl.classList.remove("captured");
+    liveHzEl.textContent = "";
+    holdHintEl.className = "hold-hint";
+    holdHintEl.textContent = "Listening…";
+    ringFg.style.strokeDashoffset = RING_LEN;
+    renderDots();
+  }
+
+  function onCaptured(midi) {
+    captured[STEPS[stepIdx].key] = midi;
+    awaitingNext = true;
+    liveNoteEl.textContent = midiToName(midi);
+    liveNoteEl.classList.add("captured");
+    holdHintEl.className = "hold-hint good";
+    holdHintEl.textContent = "✓ Got it! " + midiToName(midi);
+    ringFg.style.strokeDashoffset = 0;
+    capturedBtns.style.display = "";
+    $("nextStepBtn").textContent = (redoMode || stepIdx === STEPS.length - 1) ? "See Results 🏆" : "Next →";
+    playChime();
+    renderDots();
+  }
+
+  $("redoStepBtn").addEventListener("click", function () { beginStep(stepIdx); });
+  $("nextStepBtn").addEventListener("click", function () {
+    if (!redoMode && stepIdx < STEPS.length - 1) beginStep(stepIdx + 1);
+    else finishTest();
+  });
+  $("cancelTestBtn").addEventListener("click", function () {
+    stopMic();
+    showScreen("intro");
+    renderSaved();
+  });
+
+  function normalizeResults() {
+    // The "extreme" notes must sit outside the comfy ones; fix gently if the singer
+    // overshot (e.g. their "lowest" came out above their "comfy low").
+    var c = captured;
+    var fullLo = Math.min(c.comfLow, c.extLow);
+    var fullHi = Math.max(c.comfHigh, c.extHigh);
+    var comfyLo = c.comfLow;
+    var comfyHi = c.comfHigh;
+    if (comfyLo < fullLo) comfyLo = fullLo;
+    if (comfyHi > fullHi) comfyHi = fullHi;
+    return { fullLo: fullLo, fullHi: fullHi, comfyLo: comfyLo, comfyHi: comfyHi };
+  }
+
+  function finishTest() {
+    var r = normalizeResults();
+    if (r.comfyHi <= r.comfyLo || r.fullHi <= r.fullLo) {
+      testStatusEl.className = "status error";
+      testStatusEl.textContent = "Hmm — your high notes came out lower than your low notes. Let's redo the high steps!";
+      beginStep(2);
+      return;
+    }
+    stopMic();
+    renderResults(r);
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({
+        captured: captured, when: new Date().toISOString()
+      }));
+    } catch (e) { /* private mode — results just won't persist */ }
+    showScreen("results");
+  }
+
+  function renderResults(r) {
+    var vt = classifyVoice(r.fullLo, r.fullHi);
+    $("resFull").textContent = midiToName(r.fullLo) + "  to  " + midiToName(r.fullHi);
+    $("resComfy").textContent = midiToName(r.comfyLo) + "  to  " + midiToName(r.comfyHi);
+    var semis = r.fullHi - r.fullLo;
+    $("resSpan").textContent = (semis / 12).toFixed(1) + " octaves";
+    $("resVoice").textContent = vt.primary.name + (vt.secondary ? " (close to " + vt.secondary.name + ")" : "");
+    $("resBlurb").textContent = vt.primary.blurb;
+    $("resFamous").textContent = vt.primary.famous;
+    kbRes.paintRange(r.fullLo, r.fullHi, r.comfyLo, r.comfyHi);
+    setTimeout(function () {
+      kbRes.scrollTo($("kbResScroll"), (r.fullLo + r.fullHi) / 2);
+    }, 50);
+    // per-step redo buttons
+    var rl = $("redoLinks");
+    rl.innerHTML = "";
+    STEPS.forEach(function (s, i) {
+      var b = document.createElement("button");
+      b.innerHTML = "↺ Redo: <b>" + s.title.replace(/^\d+ · /, "") + "</b> (" + midiToName(captured[s.key]) + ")";
+      b.addEventListener("click", function () {
+        redoMode = true;
+        showScreen("test");
+        startMic(function () { beginStep(i); }, testStatusEl);
+      });
+      rl.appendChild(b);
+    });
+    updateWarmupBanner();
+  }
+
+  $("retestBtn").addEventListener("click", function () { startFullTest(); });
+  $("goWarmupBtn").addEventListener("click", function () { showTab("warmup"); });
+
+  function startFullTest() {
+    captured = {};
+    redoMode = false;
+    showScreen("test");
+    testStatusEl.className = "status";
+    testStatusEl.textContent = "";
+    startMic(function () { beginStep(0); }, testStatusEl);
+  }
+  $("startTestBtn").addEventListener("click", startFullTest);
+
+  // ================= saved result on intro =================
+  function loadSaved() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      if (!data || !data.captured) return null;
+      var c = data.captured;
+      if ([c.comfLow, c.extLow, c.comfHigh, c.extHigh].some(function (v) { return typeof v !== "number"; })) return null;
+      return data;
+    } catch (e) { return null; }
+  }
+  function renderSaved() {
+    var wrap = $("savedResultWrap");
+    wrap.innerHTML = "";
+    var data = loadSaved();
+    if (!data) return;
+    captured = data.captured;
+    var r = normalizeResults();
+    var vt = classifyVoice(r.fullLo, r.fullHi);
+    var card = document.createElement("div");
+    card.className = "card";
+    card.style.marginTop = "14px";
+    card.innerHTML = "<h2>📌 Last result</h2><p>" +
+      midiToName(r.fullLo) + " to " + midiToName(r.fullHi) +
+      " · comfy " + midiToName(r.comfyLo) + "–" + midiToName(r.comfyHi) +
+      " · <b style='color:var(--gold)'>" + vt.primary.name + "</b></p>";
+    var btn = document.createElement("button");
+    btn.className = "big-btn secondary";
+    btn.style.marginTop = "10px";
+    btn.textContent = "View full results";
+    btn.addEventListener("click", function () {
+      renderResults(r);
+      showScreen("results");
+    });
+    card.appendChild(btn);
+    wrap.appendChild(card);
+  }
+
+  // ================= audio: mic in =================
+  var audioCtx = null, analyser = null, mediaStream = null, rafId = null, micBuf = null;
+  var recent = [];
+
+  function startMic(onReady, statusEl) {
+    if (audioCtx && mediaStream) { onReady(); return; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      statusEl.className = "status error";
+      statusEl.textContent = "This browser can't access the microphone. Try Chrome, Edge or Safari over HTTPS.";
+      return;
+    }
+    statusEl.className = "status";
+    statusEl.textContent = "Requesting microphone…";
+    navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+    }).then(function (stream) {
+      mediaStream = stream;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      var source = audioCtx.createMediaStreamSource(stream);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 4096;
+      micBuf = new Float32Array(analyser.fftSize);
+      source.connect(analyser);
+      statusEl.textContent = "";
+      onReady();
+      loop();
+    }).catch(function (err) {
+      statusEl.className = "status error";
+      if (err && (err.name === "NotAllowedError" || err.name === "PermissionDeniedError")) {
+        statusEl.textContent = "Microphone blocked. Tap the 🔒/mic icon in your browser's address bar, allow the microphone, then try again.";
+      } else if (err && err.name === "NotFoundError") {
+        statusEl.textContent = "No microphone found on this device.";
+      } else {
+        statusEl.textContent = "Couldn't start the microphone: " + (err && err.message ? err.message : err);
+      }
+      showScreen("intro");
+      introStatusEl.className = statusEl.className;
+      introStatusEl.textContent = statusEl.textContent;
+    });
+  }
+
+  function stopMic() {
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+    if (mediaStream) mediaStream.getTracks().forEach(function (t) { t.stop(); });
+    mediaStream = null;
+    if (audioCtx) audioCtx.close();
+    audioCtx = null;
+    recent = [];
+    kbLive.setLive(-1);
+  }
+
+  function processFrame(freq, now) {
+    // freq <= 0 means silence/noise
+    var midiFloat = null;
+    if (freq > 0 && freq >= 55 && freq <= 1500) {
+      recent.push(freq);
+      if (recent.length > 5) recent.shift();
+      var f = median(recent);
+      midiFloat = freqToMidiFloat(f);
+      var midi = Math.round(midiFloat);
+      if (!awaitingNext) {
+        liveNoteEl.textContent = midiToName(midi);
+        liveHzEl.textContent = f.toFixed(1) + " Hz";
+        kbLive.setLive(midi);
+        kbLive.scrollTo($("kbLiveScroll"), midi);
+      }
+    } else {
+      if (recent.length) recent.shift();
+      if (!awaitingNext && !recent.length) {
+        kbLive.setLive(-1);
+      }
+    }
+    if (awaitingNext) return;
+    var res = holdDet.feed(midiFloat, now);
+    ringFg.style.strokeDashoffset = String(RING_LEN * (1 - (res.progress || 0)));
+    if (res.captured != null) { onCaptured(res.captured); return; }
+    if (midiFloat == null) {
+      holdHintEl.className = "hold-hint";
+      holdHintEl.textContent = recent.length ? "Keep going…" : "Listening…";
+    } else {
+      holdHintEl.className = "hold-hint";
+      holdHintEl.textContent = res.progress > 0.15 ? "Hold it steady…" : "I hear you — hold that note…";
+    }
+  }
+
+  function loop() {
+    if (!analyser || !audioCtx) return;
+    analyser.getFloatTimeDomainData(micBuf);
+    var freq = detectPitch(micBuf, audioCtx.sampleRate);
+    processFrame(freq, performance.now());
+    rafId = requestAnimationFrame(loop);
+  }
+
+  // ================= audio: tone out =================
+  var toneCtx = null;
+  function getToneCtx() {
+    if (!toneCtx) toneCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (toneCtx.state === "suspended") toneCtx.resume();
+    return toneCtx;
+  }
+  function playChime() {
+    try {
+      var ctx = getToneCtx(), t = ctx.currentTime;
+      [880, 1320].forEach(function (f, i) {
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = "sine"; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t + i * 0.09);
+        g.gain.exponentialRampToValueAtTime(0.12, t + i * 0.09 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.09 + 0.3);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(t + i * 0.09); o.stop(t + i * 0.09 + 0.35);
+      });
+    } catch (e) { /* sound is a nicety */ }
+  }
+  function playNote(ctx, midi, when, dur) {
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = "triangle";
+    o.frequency.value = midiToFreq(midi);
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(0.22, when + 0.03);
+    g.gain.setValueAtTime(0.22, when + dur - 0.08);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(when); o.stop(when + dur + 0.02);
+    return o;
+  }
+
+  // ================= warm-up exercises =================
+  function getComfyRange() {
+    var data = loadSaved();
+    if (!data) return null;
+    var saveCaptured = captured;
+    captured = data.captured;
+    var r = normalizeResults();
+    captured = saveCaptured;
+    return r;
+  }
+
+  var EXERCISES = [
+    {
+      id: "hum", emoji: "🐝", title: "Gentle Humming", tag: "Start here",
+      desc: "Lips closed, jaw relaxed. Hum a comfortable note and feel the buzz in your lips and nose. 30–60 seconds. This wakes the voice up gently — never skip it.",
+      pattern: null
+    },
+    {
+      id: "lip", emoji: "🚤", title: "Lip Trills (Motorboat)", tag: "Loosen up",
+      desc: "Blow air through loose, flappy lips — like a motorboat “brrrr”. Glide your pitch up and down while trilling. If your lips won't flap, press a finger lightly on each cheek.",
+      pattern: null
+    },
+    {
+      id: "scale", emoji: "🎹", title: "5-Note Scale", tag: "Play along",
+      desc: "Sing “ma-ma-ma-ma-ma” (or do-re-mi-fa-sol) up and back down, matching the notes. Tap ▲ to move up a step each round, working through your comfortable range.",
+      pattern: [0, 2, 4, 5, 7, 5, 4, 2, 0], noteDur: 0.42, span: 7
+    },
+    {
+      id: "arp", emoji: "🪜", title: "Arpeggio Ladder", tag: "Play along",
+      desc: "Sing “wee-wee-wee” jumping along the chord notes. Bigger jumps than the scale — great for smoothing out your range.",
+      pattern: [0, 4, 7, 4, 0], noteDur: 0.5, span: 7
+    },
+    {
+      id: "siren", emoji: "🚨", title: "Siren Slides", tag: "Stretch",
+      desc: "On an “ooo” or “ng” sound, slide smoothly from your lowest comfy note up to your highest and back — like a slow siren. Follow the tone as it glides.",
+      glide: true
+    }
+  ];
+
+  var playing = null; // {id, stop}
+  function stopPlaying() {
+    if (playing) {
+      try { playing.stop(); } catch (e) {}
+      playing = null;
+    }
+  }
+
+  function buildExercises() {
+    var list = $("exerciseList");
+    list.innerHTML = "";
+    EXERCISES.forEach(function (ex) {
+      var card = document.createElement("div");
+      card.className = "card ex-card";
+      var head = "<div class='ex-head'><span class='ex-emoji'>" + ex.emoji + "</span><h3>" + ex.title + "</h3><span class='ex-tag'>" + ex.tag + "</span></div>" +
+                 "<p>" + ex.desc + "</p>";
+      card.innerHTML = head;
+
+      if (ex.pattern || ex.glide) {
+        var controls = document.createElement("div");
+        controls.className = "ex-controls";
+        var playBtn = document.createElement("button");
+        playBtn.className = "play-btn";
+        playBtn.textContent = "▶ Play";
+        controls.appendChild(playBtn);
+
+        var rootMidi = 48; // C3 default; replaced by user's comfy low when available
+        var r = getComfyRange();
+        if (r) rootMidi = ex.glide ? r.comfyLo : Math.min(r.comfyLo, r.comfyHi - (ex.span || 0));
+        if (rootMidi < KB_LO) rootMidi = KB_LO;
+
+        var curEl = null, hintEl = null;
+        if (ex.pattern) {
+          var down = document.createElement("button");
+          down.className = "step-knob"; down.textContent = "▼";
+          var up = document.createElement("button");
+          up.className = "step-knob"; up.textContent = "▲";
+          controls.appendChild(down); controls.appendChild(up);
+
+          var readout = document.createElement("div");
+          readout.className = "ex-note-readout";
+          readout.innerHTML = "<span class='cur'></span><span class='lbl'>Starting note</span>";
+          controls.appendChild(readout);
+          curEl = readout.querySelector(".cur");
+
+          hintEl = document.createElement("div");
+          hintEl.className = "ex-hint";
+
+          var renderRoot = function () {
+            curEl.textContent = midiToName(rootMidi);
+            var r2 = getComfyRange();
+            if (r2 && hintEl) {
+              if (rootMidi + ex.span >= r2.comfyHi) hintEl.textContent = "⭐ Top of your comfy range — nice work!";
+              else if (rootMidi <= r2.comfyLo) hintEl.textContent = "Starting at your comfy low — tap ▲ after each round.";
+              else hintEl.textContent = "";
+            }
+          };
+          down.addEventListener("click", function () { if (rootMidi > KB_LO) { rootMidi--; renderRoot(); } });
+          up.addEventListener("click", function () { if (rootMidi + ex.span < KB_HI) { rootMidi++; renderRoot(); } });
+          renderRoot();
+        }
+
+        playBtn.addEventListener("click", function () {
+          if (playing && playing.id === ex.id) { stopPlaying(); playBtn.textContent = "▶ Play"; playBtn.classList.remove("playing"); return; }
+          stopPlaying();
+          document.querySelectorAll(".play-btn").forEach(function (b) { b.textContent = "▶ Play"; b.classList.remove("playing"); });
+          var ctx = getToneCtx();
+          var stopped = false;
+          var oscs = [];
+
+          if (ex.glide) {
+            var r3 = getComfyRange();
+            var lo = r3 ? r3.comfyLo : 48, hi = r3 ? r3.comfyHi : 60;
+            if (hi - lo < 4) hi = lo + 4;
+            var o = ctx.createOscillator(), g = ctx.createGain();
+            o.type = "triangle";
+            var t = ctx.currentTime;
+            o.frequency.setValueAtTime(midiToFreq(lo), t);
+            o.frequency.exponentialRampToValueAtTime(midiToFreq(hi), t + 2.5);
+            o.frequency.exponentialRampToValueAtTime(midiToFreq(lo), t + 5);
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.2, t + 0.1);
+            g.gain.setValueAtTime(0.2, t + 4.7);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 5);
+            o.connect(g); g.connect(ctx.destination);
+            o.start(t); o.stop(t + 5.1);
+            oscs.push(o);
+            o.onended = function () {
+              if (!stopped && playing && playing.id === ex.id) {
+                playing = null;
+                playBtn.textContent = "▶ Play";
+                playBtn.classList.remove("playing");
+              }
+            };
+          } else {
+            var t0 = ctx.currentTime + 0.05;
+            ex.pattern.forEach(function (off, i) {
+              oscs.push(playNote(ctx, rootMidi + off, t0 + i * ex.noteDur, ex.noteDur * 0.92));
+            });
+            var last = oscs[oscs.length - 1];
+            last.onended = function () {
+              if (!stopped && playing && playing.id === ex.id) {
+                playing = null;
+                playBtn.textContent = "▶ Play";
+                playBtn.classList.remove("playing");
+              }
+            };
+          }
+
+          playing = {
+            id: ex.id,
+            stop: function () {
+              stopped = true;
+              oscs.forEach(function (o) { try { o.stop(); } catch (e) {} });
+            }
+          };
+          playBtn.textContent = "■ Stop";
+          playBtn.classList.add("playing");
+        });
+
+        card.appendChild(controls);
+        if (hintEl) card.appendChild(hintEl);
+      }
+      list.appendChild(card);
+    });
+  }
+
+  function updateWarmupBanner() {
+    var r = getComfyRange();
+    var b = $("warmupBanner");
+    if (r) {
+      b.innerHTML = "Tuned to your voice: comfy range <b>" + midiToName(r.comfyLo) + "–" + midiToName(r.comfyHi) + "</b>. Always warm up gently — stop if anything hurts.";
+    } else {
+      b.innerHTML = "Do the range test first and these exercises will automatically fit <b>your</b> voice.";
+    }
+    buildExercises(); // rebuild so starting notes pick up the new range
+  }
+
+  // ================= boot =================
+  renderSaved();
+  updateWarmupBanner();
+  window.addEventListener("pagehide", stopMic);
+
+  // hooks for automated verification
+  window.Pipes = {
+    detectPitch: detectPitch,
+    freqToMidiFloat: freqToMidiFloat,
+    midiToName: midiToName,
+    midiToFreq: midiToFreq,
+    classifyVoice: classifyVoice,
+    HoldDetector: HoldDetector,
+    _processFrame: processFrame,
+    _beginStep: beginStep,
+    _showScreen: showScreen,
+    _startFullTest: function () { captured = {}; showScreen("test"); beginStep(0); },
+    _getCaptured: function () { return captured; },
+    _finishTest: finishTest
+  };
+})();
+</script>
+</body>
+</html>
