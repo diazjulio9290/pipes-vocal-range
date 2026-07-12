@@ -264,6 +264,39 @@
   .ex-note-readout .lbl { display: block; font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
   .ex-hint { font-size: 0.74rem; color: var(--teal); margin-top: 8px; min-height: 1.2em; }
 
+  /* ============ EXERCISE TIMER ============ */
+  .ex-timer { margin-top: 14px; }
+  .timer-face { text-align: center; margin-bottom: 8px; }
+  .timer-time {
+    font-size: 2.6rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .timer-time.running { color: var(--gold); text-shadow: 0 0 20px rgba(255,200,87,0.4); }
+  .timer-time.done { color: var(--good); text-shadow: 0 0 20px rgba(74,222,128,0.45); }
+  .timer-bar {
+    height: 10px;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.3);
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+    margin-bottom: 12px;
+  }
+  .timer-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--gold), var(--rose));
+    box-shadow: 0 0 10px rgba(255,200,87,0.4);
+    transition: width 0.2s linear;
+  }
+  .timer-fill.done { background: var(--good); box-shadow: 0 0 10px rgba(74,222,128,0.5); }
+  .timer-controls { display: flex; gap: 10px; }
+  .timer-controls .play-btn { flex: 1; min-width: 0; }
+  .timer-msg { text-align: center; }
+
   .range-banner {
     text-align: center;
     font-size: 0.82rem;
@@ -569,6 +602,7 @@
     tabWarmup.classList.toggle("active", !range);
     panelRange.classList.toggle("active", range);
     panelWarmup.classList.toggle("active", !range);
+    if (range) { resetAllTimers(); stopPlaying(); } // leaving warm-ups — reset timers to a clean start
     if (!range) stopMic(); // mic isn't needed on the warm-up tab
   }
   tabRange.addEventListener("click", function () { showTab("range"); });
@@ -902,13 +936,13 @@
   var EXERCISES = [
     {
       id: "hum", emoji: "🐝", title: "Gentle Humming", tag: "Start here",
-      desc: "Lips closed, jaw relaxed. Hum a comfortable note and feel the buzz in your lips and nose. 30–60 seconds. This wakes the voice up gently — never skip it.",
-      pattern: null
+      desc: "Lips closed, jaw relaxed. Hum a comfortable note and feel the buzz in your lips and nose. This wakes the voice up gently — never skip it.",
+      timer: 30, timerMsg: "Hum steadily — breathe whenever you need to."
     },
     {
       id: "lip", emoji: "🚤", title: "Lip Trills (Motorboat)", tag: "Loosen up",
       desc: "Blow air through loose, flappy lips — like a motorboat “brrrr”. Glide your pitch up and down while trilling. If your lips won't flap, press a finger lightly on each cheek.",
-      pattern: null
+      timer: 30, timerMsg: "Keep the motorboat going — glide up and down."
     },
     {
       id: "scale", emoji: "🎹", title: "5-Note Scale", tag: "Play along",
@@ -935,7 +969,124 @@
     }
   }
 
+  // ---- countdown timer (hum / lip trills) ----
+  var activeTimers = [];    // pause fns of currently-running timers (0 or 1 in practice)
+  var timerResets = [];     // reset fns of every built timer
+  function pauseRunningTimers() {
+    activeTimers.slice().forEach(function (pause) { try { pause(); } catch (e) {} });
+    activeTimers = [];
+  }
+  function resetAllTimers() {
+    pauseRunningTimers();
+    timerResets.forEach(function (reset) { try { reset(); } catch (e) {} });
+  }
+  function fmtTime(ms) {
+    var s = Math.max(0, Math.ceil(ms / 1000));
+    var m = Math.floor(s / 60);
+    var ss = s % 60;
+    return m + ":" + (ss < 10 ? "0" : "") + ss;
+  }
+  function makeTimer(card, totalSec, msg) {
+    var totalMs = totalSec * 1000;
+    var wrap = document.createElement("div");
+    wrap.className = "ex-timer";
+    wrap.innerHTML =
+      "<div class='timer-face'><span class='timer-time'>" + fmtTime(totalMs) + "</span></div>" +
+      "<div class='timer-bar'><div class='timer-fill'></div></div>" +
+      "<div class='timer-controls'><button class='play-btn timer-btn'>▶ Start · " + totalSec + "s</button></div>" +
+      "<div class='ex-hint timer-msg'></div>";
+    var timeEl = wrap.querySelector(".timer-time");
+    var fillEl = wrap.querySelector(".timer-fill");
+    var btn = wrap.querySelector(".timer-btn");
+    var msgEl = wrap.querySelector(".timer-msg");
+
+    var state = "idle";        // idle | running | done
+    var remaining = totalMs;   // ms left when paused/idle
+    var endAt = 0;             // performance.now() target while running
+    var intId = null;
+
+    function paint(ms) {
+      timeEl.textContent = fmtTime(ms);
+      fillEl.style.width = (100 * (1 - ms / totalMs)) + "%";
+    }
+    function tick() {
+      var left = endAt - performance.now();
+      if (left <= 0) { finish(); return; }
+      remaining = left;
+      paint(left);
+    }
+    function unregister() {
+      activeTimers = activeTimers.filter(function (f) { return f !== pause; });
+    }
+    function finish() {
+      cancel();
+      unregister();
+      state = "done";
+      remaining = totalMs;
+      timeEl.textContent = "✓ Done!";
+      timeEl.className = "timer-time done";
+      fillEl.className = "timer-fill done";
+      fillEl.style.width = "100%";
+      btn.textContent = "↺ Again";
+      btn.classList.remove("playing");
+      msgEl.textContent = "Nice work! Tap ↺ to go again.";
+      playChime();
+    }
+    function cancel() {
+      if (intId) clearInterval(intId);
+      intId = null;
+    }
+    function pause() {
+      cancel();
+      unregister();
+      state = "idle";
+      timeEl.className = "timer-time";
+      btn.textContent = "▶ Resume";
+      btn.classList.remove("playing");
+      msgEl.textContent = "Paused — tap Resume when you're ready.";
+    }
+    function resetToIdle() {
+      cancel();
+      unregister();
+      state = "idle";
+      remaining = totalMs;
+      timeEl.textContent = fmtTime(totalMs);
+      timeEl.className = "timer-time";
+      fillEl.className = "timer-fill";
+      fillEl.style.width = "0%";
+      btn.textContent = "▶ Start · " + totalSec + "s";
+      btn.classList.remove("playing");
+      msgEl.textContent = "";
+    }
+    timerResets.push(resetToIdle);
+    function run(fromMs) {
+      pauseRunningTimers();     // only one timer at a time (previous stays resumable)
+      activeTimers.push(pause); // pause() safely stops this timer
+      stopPlaying();            // silence any play-along tones
+      state = "running";
+      remaining = fromMs;
+      endAt = performance.now() + fromMs;
+      timeEl.className = "timer-time running";
+      fillEl.className = "timer-fill";
+      btn.textContent = "⏸ Pause";
+      btn.classList.add("playing");
+      msgEl.textContent = msg || "Keep going…";
+      paint(fromMs);
+      intId = setInterval(tick, 200);
+    }
+
+    btn.addEventListener("click", function () {
+      if (state === "running") { pause(); return; }
+      if (state === "done") { remaining = totalMs; }
+      run(remaining);
+    });
+
+    card.appendChild(wrap);
+  }
+
   function buildExercises() {
+    pauseRunningTimers();
+    timerResets = [];
     var list = $("exerciseList");
     list.innerHTML = "";
     EXERCISES.forEach(function (ex) {
@@ -944,6 +1095,10 @@
       var head = "<div class='ex-head'><span class='ex-emoji'>" + ex.emoji + "</span><h3>" + ex.title + "</h3><span class='ex-tag'>" + ex.tag + "</span></div>" +
                  "<p>" + ex.desc + "</p>";
       card.innerHTML = head;
+
+      if (ex.timer) {
+        makeTimer(card, ex.timer, ex.timerMsg);
+      }
 
       if (ex.pattern || ex.glide) {
         var controls = document.createElement("div");
