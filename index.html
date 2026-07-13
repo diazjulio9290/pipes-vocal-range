@@ -1020,18 +1020,23 @@
       timer: 30, timerMsg: "Keep the motorboat going — glide up and down."
     },
     {
-      id: "scale", emoji: "🎹", title: "5-Note Scale", tag: "Play along",
-      desc: "Sing “ma-ma-ma-ma-ma” (or do-re-mi-fa-sol) up and back down, matching the notes. Tap ▲ to move up a step each round, working through your comfortable range.",
+      id: "scale", emoji: "🎹", title: "5-Note Scale", tag: "Play along · Loops",
+      desc: "Sing “ma-ma-ma-ma-ma” (or do-re-mi-fa-sol) up and back down, matching the notes. It plays on a loop until you tap ■ Stop — tap ▲ any time to move up a step and work through your range.",
       pattern: [0, 2, 4, 5, 7, 5, 4, 2, 0], noteDur: 0.42, span: 7
     },
     {
-      id: "arp", emoji: "🪜", title: "Arpeggio Ladder", tag: "Play along",
-      desc: "Sing “wee-wee-wee” jumping along the chord notes. Bigger jumps than the scale — great for smoothing out your range.",
+      id: "scale7", emoji: "🎼", title: "7-Note Scale", tag: "Play along · Loops",
+      desc: "The full do-re-mi-fa-sol-la-ti-do scale, all the way up to the octave and back down. A bigger stretch than the 5-note. Loops until you tap ■ Stop — tap ▲ to move it up.",
+      pattern: [0, 2, 4, 5, 7, 9, 11, 12, 11, 9, 7, 5, 4, 2, 0], noteDur: 0.36, span: 12
+    },
+    {
+      id: "arp", emoji: "🪜", title: "Arpeggio Ladder", tag: "Play along · Loops",
+      desc: "Sing “wee-wee-wee” jumping along the chord notes. Bigger jumps than the scale — great for smoothing out your range. Loops until you tap ■ Stop.",
       pattern: [0, 4, 7, 4, 0], noteDur: 0.5, span: 7
     },
     {
-      id: "siren", emoji: "🚨", title: "Siren Slides", tag: "Stretch",
-      desc: "On an “ooo” or “ng” sound, slide smoothly from your lowest comfy note up to your highest and back — like a slow siren. Follow the tone as it glides.",
+      id: "siren", emoji: "🚨", title: "Siren Slides", tag: "Stretch · Loops",
+      desc: "On an “ooo” or “ng” sound, slide smoothly from your lowest comfy note up to your highest and back — like a slow siren. Follow the tone as it glides. Loops until you tap ■ Stop.",
       glide: true
     }
   ];
@@ -1229,52 +1234,50 @@
           pauseRunningTimers();  // don't let a timer keep running behind a play-along
           stopIntervals();       // silence any interval loop
           var ctx = getToneCtx();
-          var stopped = false;
-          var oscs = [];
+          var stopped = false, timeoutId = null, oscs = [];
 
-          if (ex.glide) {
-            var r3 = getComfyRange();
-            var lo = r3 ? r3.comfyLo : 48, hi = r3 ? r3.comfyHi : 60;
-            if (hi - lo < 4) hi = lo + 4;
-            var o = ctx.createOscillator(), g = ctx.createGain();
-            o.type = "triangle";
-            var t = ctx.currentTime;
-            o.frequency.setValueAtTime(midiToFreq(lo), t);
-            o.frequency.exponentialRampToValueAtTime(midiToFreq(hi), t + 2.5);
-            o.frequency.exponentialRampToValueAtTime(midiToFreq(lo), t + 5);
-            g.gain.setValueAtTime(0.0001, t);
-            g.gain.exponentialRampToValueAtTime(0.2, t + 0.1);
-            g.gain.setValueAtTime(0.2, t + 4.7);
-            g.gain.exponentialRampToValueAtTime(0.0001, t + 5);
-            o.connect(g); g.connect(ctx.destination);
-            o.start(t); o.stop(t + 5.1);
-            oscs.push(o);
-            o.onended = function () {
-              if (!stopped && playing && playing.id === ex.id) {
-                playing = null;
-                playBtn.textContent = "▶ Play";
-                playBtn.classList.remove("playing");
+          // Play one pass of the exercise, then schedule the next — loops until Stop.
+          function loopPass() {
+            if (stopped) return;
+            oscs.forEach(function (o) { try { o.stop(); } catch (e) {} });
+            oscs = [];
+            var periodMs;
+            if (ex.glide) {
+              var r3 = getComfyRange();
+              var lo = r3 ? r3.comfyLo : 48, hi = r3 ? r3.comfyHi : 60;
+              if (hi - lo < 4) hi = lo + 4;
+              var o = ctx.createOscillator(), g = ctx.createGain();
+              o.type = "triangle";
+              var t = ctx.currentTime;
+              o.frequency.setValueAtTime(midiToFreq(lo), t);
+              o.frequency.exponentialRampToValueAtTime(midiToFreq(hi), t + 2.5);
+              o.frequency.exponentialRampToValueAtTime(midiToFreq(lo), t + 5);
+              g.gain.setValueAtTime(0.0001, t);
+              g.gain.exponentialRampToValueAtTime(0.2, t + 0.1);
+              g.gain.setValueAtTime(0.2, t + 4.7);
+              g.gain.exponentialRampToValueAtTime(0.0001, t + 5);
+              o.connect(g); g.connect(ctx.destination);
+              o.start(t); o.stop(t + 5.1);
+              oscs.push(o);
+              notesPlayed++;
+              periodMs = (5 + 0.5) * 1000;
+            } else {
+              // read rootMidi fresh each pass so ▲▼ move it up/down between loops
+              var t0 = ctx.currentTime + 0.05;
+              for (var i = 0; i < ex.pattern.length; i++) {
+                oscs.push(playNote(ctx, rootMidi + ex.pattern[i], t0 + i * ex.noteDur, ex.noteDur * 0.92));
               }
-            };
-          } else {
-            var t0 = ctx.currentTime + 0.05;
-            ex.pattern.forEach(function (off, i) {
-              oscs.push(playNote(ctx, rootMidi + off, t0 + i * ex.noteDur, ex.noteDur * 0.92));
-            });
-            var last = oscs[oscs.length - 1];
-            last.onended = function () {
-              if (!stopped && playing && playing.id === ex.id) {
-                playing = null;
-                playBtn.textContent = "▶ Play";
-                playBtn.classList.remove("playing");
-              }
-            };
+              periodMs = (ex.pattern.length * ex.noteDur + 0.6) * 1000;
+            }
+            timeoutId = setTimeout(loopPass, periodMs);
           }
+          loopPass();
 
           playing = {
             id: ex.id,
             stop: function () {
               stopped = true;
+              if (timeoutId) clearTimeout(timeoutId);
               oscs.forEach(function (o) { try { o.stop(); } catch (e) {} });
             }
           };
@@ -1465,6 +1468,7 @@
     _finishTest: finishTest,
     _notesPlayed: function () { return notesPlayed; },
     _intervalPlaying: function () { return intervalCtl != null; },
+    _playingId: function () { return playing ? playing.id : null; },
     INTERVALS: INTERVALS
   };
 })();
