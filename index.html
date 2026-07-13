@@ -1021,13 +1021,13 @@
     },
     {
       id: "scale", emoji: "🎹", title: "5-Note Scale", tag: "Play along · Loops",
-      desc: "Sing “ma-ma-ma-ma-ma” (or do-re-mi-fa-sol) up and back down, matching the notes. It plays on a loop until you tap ■ Stop — tap ▲ any time to move up a step and work through your range.",
-      pattern: [0, 2, 4, 5, 7, 5, 4, 2, 0], noteDur: 0.42, span: 7
+      desc: "Sing “ma-ma-ma-ma-ma” (or do-re-mi-fa-sol) up and back down, holding that last “doooo” nice and long. It plays on a loop until you tap ■ Stop — tap ▲ any time to move up a step and work through your range.",
+      pattern: [0, 2, 4, 5, 7, 5, 4, 2, 0], noteDur: 0.42, span: 7, holdLast: 2
     },
     {
       id: "scale7", emoji: "🎼", title: "7-Note Scale", tag: "Play along · Loops",
-      desc: "The full do-re-mi-fa-sol-la-ti-do scale, all the way up to the octave and back down. A bigger stretch than the 5-note. Loops until you tap ■ Stop — tap ▲ to move it up.",
-      pattern: [0, 2, 4, 5, 7, 9, 11, 12, 11, 9, 7, 5, 4, 2, 0], noteDur: 0.36, span: 12
+      desc: "The full do-re-mi-fa-sol-la-ti-do scale up to the octave and back down, resting on a nice long final “doooo”. A bigger stretch than the 5-note. Loops until you tap ■ Stop — tap ▲ to move it up.",
+      pattern: [0, 2, 4, 5, 7, 9, 11, 12, 11, 9, 7, 5, 4, 2, 0], noteDur: 0.36, span: 12, holdLast: 2
     },
     {
       id: "arp", emoji: "🪜", title: "Arpeggio Ladder", tag: "Play along · Loops",
@@ -1264,10 +1264,14 @@
             } else {
               // read rootMidi fresh each pass so ▲▼ move it up/down between loops
               var t0 = ctx.currentTime + 0.05;
+              var when = t0;
+              var lastMult = ex.holdLast || 1; // hold the final note (the return to "do") longer
               for (var i = 0; i < ex.pattern.length; i++) {
-                oscs.push(playNote(ctx, rootMidi + ex.pattern[i], t0 + i * ex.noteDur, ex.noteDur * 0.92));
+                var slot = ex.noteDur * (i === ex.pattern.length - 1 ? lastMult : 1);
+                oscs.push(playNote(ctx, rootMidi + ex.pattern[i], when, slot * 0.92));
+                when += slot;
               }
-              periodMs = (ex.pattern.length * ex.noteDur + 0.6) * 1000;
+              periodMs = ((when - t0) + 0.6) * 1000;
             }
             timeoutId = setTimeout(loopPass, periodMs);
           }
