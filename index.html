@@ -297,6 +297,65 @@
   .timer-controls .play-btn { flex: 1; min-width: 0; }
   .timer-msg { text-align: center; }
 
+  /* ============ SECTION TITLE ============ */
+  .section-title {
+    display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+    font-size: 1.1rem; font-weight: 800; color: var(--gold);
+    margin: 22px 4px 12px;
+  }
+  .section-title small { font-weight: 600; color: var(--muted); font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; }
+
+  /* ============ INTERVAL TRAINER ============ */
+  .iv-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.55; margin-bottom: 14px; }
+  .iv-toprow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .iv-repeat {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 999px; padding: 8px 13px; cursor: pointer;
+    font-size: 0.82rem; font-weight: 700; color: var(--muted); user-select: none;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .iv-repeat .pip { width: 34px; height: 19px; border-radius: 999px; background: rgba(255,255,255,0.15); position: relative; transition: background 0.15s; }
+  .iv-repeat .pip::after { content:""; position:absolute; top:2px; left:2px; width:15px; height:15px; border-radius:50%; background:#fff; transition: transform 0.15s; }
+  .iv-repeat.on { color: var(--gold); border-color: rgba(255,200,87,0.5); }
+  .iv-repeat.on .pip { background: var(--gold); }
+  .iv-repeat.on .pip::after { transform: translateX(15px); }
+  .iv-root { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+  .iv-root-note { font-weight: 800; color: var(--gold); min-width: 46px; text-align: center; font-size: 1rem; }
+  .iv-root-lbl { display: block; font-size: 0.56rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); text-align: center; }
+
+  .iv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .iv-btn {
+    border: 1px solid rgba(255,255,255,0.12);
+    background: linear-gradient(180deg, rgba(124,111,208,0.24), rgba(124,111,208,0.08));
+    border-radius: 14px; padding: 13px 6px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    font-family: inherit; color: var(--text);
+    transition: transform 0.08s, box-shadow 0.15s, background 0.15s, color 0.15s;
+  }
+  .iv-btn:active { transform: translateY(1px); }
+  .iv-btn .iv-num { font-size: 1.18rem; font-weight: 800; }
+  .iv-btn .iv-sub { font-size: 0.58rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .iv-btn.active {
+    background: linear-gradient(180deg, #ffd97a, var(--gold));
+    color: #2a1c00;
+    box-shadow: 0 0 18px rgba(255,200,87,0.45);
+  }
+  .iv-btn.active .iv-sub { color: rgba(42,28,0,0.72); }
+
+  .iv-now {
+    margin-top: 14px; text-align: center; min-height: 2.4em;
+    background: rgba(0,0,0,0.22); border-radius: 12px; padding: 12px;
+  }
+  .iv-now-name { font-weight: 800; color: var(--gold); font-size: 1rem; }
+  .iv-now-hint { display: block; font-size: 0.8rem; color: var(--muted); margin-top: 4px; line-height: 1.45; }
+  .iv-stop {
+    margin-top: 11px; border: none; border-radius: 10px; padding: 9px 20px;
+    font-family: inherit; font-weight: 800; font-size: 0.82rem; cursor: pointer;
+    background: linear-gradient(180deg, #ff9ec9, var(--rose)); color: #3d0a24;
+  }
+  .iv-stop:active { transform: translateY(1px); }
+
   .range-banner {
     text-align: center;
     font-size: 0.82rem;
@@ -409,6 +468,9 @@
       Do the range test first and these exercises will automatically fit <b>your</b> voice.
     </div>
     <div id="exerciseList"></div>
+
+    <div class="section-title">🎧 Interval Trainer <small>Ear Training · Relative Pitch</small></div>
+    <div id="intervalTrainer"></div>
   </div>
 
   <footer>PIPES · VOCAL RANGE FINDER<br>Developed by Julio Diaz</footer>
@@ -602,7 +664,7 @@
     tabWarmup.classList.toggle("active", !range);
     panelRange.classList.toggle("active", range);
     panelWarmup.classList.toggle("active", !range);
-    if (range) { resetAllTimers(); stopPlaying(); } // leaving warm-ups — reset timers to a clean start
+    if (range) { resetAllTimers(); stopPlaying(); resetPlayAlongButtons(); stopIntervals(); } // leaving warm-ups — reset to a clean start
     if (!range) stopMic(); // mic isn't needed on the warm-up tab
   }
   tabRange.addEventListener("click", function () { showTab("range"); });
@@ -890,6 +952,7 @@
 
   // ================= audio: tone out =================
   var toneCtx = null;
+  var notesPlayed = 0; // counter for automated verification
   function getToneCtx() {
     if (!toneCtx) toneCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (toneCtx.state === "suspended") toneCtx.resume();
@@ -910,6 +973,7 @@
     } catch (e) { /* sound is a nicety */ }
   }
   function playNote(ctx, midi, when, dur) {
+    notesPlayed++;
     var o = ctx.createOscillator(), g = ctx.createGain();
     o.type = "triangle";
     o.frequency.value = midiToFreq(midi);
@@ -931,6 +995,17 @@
     var r = normalizeResults();
     captured = saveCaptured;
     return r;
+  }
+
+  // reset only the play-along (scale/arpeggio/siren) buttons — NOT timer/interval buttons
+  function resetPlayAlongButtons() {
+    var list = $("exerciseList");
+    if (!list) return;
+    var btns = list.querySelectorAll(".ex-controls .play-btn");
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].textContent = "▶ Play";
+      btns[i].classList.remove("playing");
+    }
   }
 
   var EXERCISES = [
@@ -1063,6 +1138,8 @@
       pauseRunningTimers();     // only one timer at a time (previous stays resumable)
       activeTimers.push(pause); // pause() safely stops this timer
       stopPlaying();            // silence any play-along tones
+      resetPlayAlongButtons();
+      stopIntervals();          // silence any interval loop
       state = "running";
       remaining = fromMs;
       endAt = performance.now() + fromMs;
@@ -1086,6 +1163,7 @@
 
   function buildExercises() {
     pauseRunningTimers();
+    stopPlaying();
     timerResets = [];
     var list = $("exerciseList");
     list.innerHTML = "";
@@ -1147,7 +1225,9 @@
         playBtn.addEventListener("click", function () {
           if (playing && playing.id === ex.id) { stopPlaying(); playBtn.textContent = "▶ Play"; playBtn.classList.remove("playing"); return; }
           stopPlaying();
-          document.querySelectorAll(".play-btn").forEach(function (b) { b.textContent = "▶ Play"; b.classList.remove("playing"); });
+          resetPlayAlongButtons();
+          pauseRunningTimers();  // don't let a timer keep running behind a play-along
+          stopIntervals();       // silence any interval loop
           var ctx = getToneCtx();
           var stopped = false;
           var oscs = [];
@@ -1209,6 +1289,149 @@
     });
   }
 
+  // ================= interval trainer (ear training) =================
+  var INTERVALS = [
+    { name: "2nd",    sub: "Major",     semi: 2,  hint: "the first two notes of “Happy Birthday”" },
+    { name: "3rd",    sub: "Major",     semi: 4,  hint: "the start of “When the Saints Go Marching In”" },
+    { name: "4th",    sub: "Perfect",   semi: 5,  hint: "“Here Comes the Bride”" },
+    { name: "5th",    sub: "Perfect",   semi: 7,  hint: "“Twinkle, Twinkle” or the Star Wars theme" },
+    { name: "6th",    sub: "Major",     semi: 9,  hint: "“My Bonnie Lies Over the Ocean”" },
+    { name: "7th",    sub: "Major",     semi: 11, hint: "the big stretch in the “Take On Me” chorus" },
+    { name: "Octave", sub: "Perfect 8", semi: 12, hint: "“Some-where” in “Over the Rainbow”" }
+  ];
+  var intervalCtl = null;   // { stop } for the currently sounding interval
+  var ivRepeat = false;     // loop toggle
+  var ivRoot = 57;          // starting (lower) note, MIDI
+
+  function stopIntervals() {
+    if (intervalCtl) { try { intervalCtl.stop(); } catch (e) {} intervalCtl = null; }
+    var box = $("intervalTrainer");
+    if (!box) return;
+    var actives = box.querySelectorAll(".iv-btn.active");
+    for (var i = 0; i < actives.length; i++) actives[i].classList.remove("active");
+    var now = box.querySelector(".iv-now");
+    if (now) now.innerHTML = "<span class='iv-now-hint'>Tap an interval to hear it, then try to sing the second note back.</span>";
+  }
+
+  function buildIntervalTrainer() {
+    var box = $("intervalTrainer");
+    if (!box) return;
+    stopIntervals();
+
+    var r = getComfyRange();
+    ivRoot = r ? r.comfyLo : 57;               // start on the user's comfy low, or A3
+    if (ivRoot < KB_LO) ivRoot = KB_LO;
+    if (ivRoot > KB_HI - 12) ivRoot = KB_HI - 12; // leave room for an octave above
+
+    box.innerHTML = "";
+    var card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = "<p class='iv-desc'>Hear two notes and learn the “gap” between them — this is how you build <b>relative pitch</b> and start singing in tune. Tap an interval, then sing the second note back. Turn on <b>Repeat</b> to loop it while you practice.</p>";
+
+    var top = document.createElement("div");
+    top.className = "iv-toprow";
+    var rep = document.createElement("div");
+    rep.className = "iv-repeat" + (ivRepeat ? " on" : "");
+    rep.innerHTML = "<span class='pip'></span><span class='rep-lbl'>Repeat: " + (ivRepeat ? "On" : "Off") + "</span>";
+    var rootWrap = document.createElement("div");
+    rootWrap.className = "iv-root";
+    rootWrap.innerHTML =
+      "<button class='step-knob' data-dir='down' aria-label='Lower start note'>▼</button>" +
+      "<div><div class='iv-root-note'></div><span class='iv-root-lbl'>Start note</span></div>" +
+      "<button class='step-knob' data-dir='up' aria-label='Raise start note'>▲</button>";
+    top.appendChild(rep);
+    top.appendChild(rootWrap);
+    card.appendChild(top);
+
+    var grid = document.createElement("div");
+    grid.className = "iv-grid";
+    INTERVALS.forEach(function (iv) {
+      var b = document.createElement("button");
+      b.className = "iv-btn";
+      b.dataset.semi = iv.semi;
+      b.dataset.name = iv.name;
+      b.innerHTML = "<span class='iv-num'>" + iv.name + "</span><span class='iv-sub'>" + iv.sub + "</span>";
+      grid.appendChild(b);
+    });
+    card.appendChild(grid);
+
+    var now = document.createElement("div");
+    now.className = "iv-now";
+    now.innerHTML = "<span class='iv-now-hint'>Tap an interval to hear it, then try to sing the second note back.</span>";
+    card.appendChild(now);
+
+    box.appendChild(card);
+
+    var rootNoteEl = rootWrap.querySelector(".iv-root-note");
+    function renderRoot() { rootNoteEl.textContent = midiToName(ivRoot); }
+    renderRoot();
+    var knobs = rootWrap.querySelectorAll(".step-knob");
+    for (var k = 0; k < knobs.length; k++) {
+      (function (knob) {
+        knob.addEventListener("click", function () {
+          if (knob.dataset.dir === "up" && ivRoot < KB_HI - 12) ivRoot++;
+          if (knob.dataset.dir === "down" && ivRoot > KB_LO) ivRoot--;
+          renderRoot();
+        });
+      })(knobs[k]);
+    }
+
+    var repLbl = rep.querySelector(".rep-lbl");
+    rep.addEventListener("click", function () {
+      ivRepeat = !ivRepeat;
+      rep.classList.toggle("on", ivRepeat);
+      repLbl.textContent = "Repeat: " + (ivRepeat ? "On" : "Off");
+    });
+
+    var btns = grid.querySelectorAll(".iv-btn");
+    for (var bi = 0; bi < btns.length; bi++) {
+      (function (b) {
+        b.addEventListener("click", function () {
+          var wasActive = b.classList.contains("active");
+          // stop this + any other warm-up audio
+          stopIntervals();
+          stopPlaying();
+          resetPlayAlongButtons();
+          pauseRunningTimers();
+          if (wasActive) return; // tapping the lit interval turns it off
+
+          var semi = Number(b.dataset.semi);
+          var iv = INTERVALS.filter(function (x) { return x.semi === semi; })[0];
+          b.classList.add("active");
+          now.innerHTML =
+            "<span class='iv-now-name'>" + iv.sub + " " + iv.name +
+            " · " + midiToName(ivRoot) + "→" + midiToName(ivRoot + semi) + "</span>" +
+            "<span class='iv-now-hint'>Sounds like " + iv.hint +
+            (ivRepeat ? " · looping" : "") + "</span>" +
+            "<button class='iv-stop'>■ Stop</button>";
+          now.querySelector(".iv-stop").addEventListener("click", stopIntervals);
+
+          var ctx = getToneCtx();
+          var stopped = false, timeoutId = null, oscs = [];
+          function playRep() {
+            if (stopped) return;
+            oscs.length = 0;
+            var noteDur = 0.55, gap = 0.06;
+            var t = ctx.currentTime + 0.03;
+            oscs.push(playNote(ctx, ivRoot, t, noteDur));
+            oscs.push(playNote(ctx, ivRoot + semi, t + noteDur + gap, noteDur));
+            var periodMs = (noteDur * 2 + gap + 0.7) * 1000; // sound + rest
+            if (ivRepeat) timeoutId = setTimeout(playRep, periodMs);
+            else timeoutId = setTimeout(function () { if (!stopped) stopIntervals(); }, periodMs);
+          }
+          playRep();
+          intervalCtl = {
+            stop: function () {
+              stopped = true;
+              if (timeoutId) clearTimeout(timeoutId);
+              oscs.forEach(function (o) { try { o.stop(); } catch (e) {} });
+            }
+          };
+        });
+      })(btns[bi]);
+    }
+  }
+
   function updateWarmupBanner() {
     var r = getComfyRange();
     var b = $("warmupBanner");
@@ -1217,13 +1440,14 @@
     } else {
       b.innerHTML = "Do the range test first and these exercises will automatically fit <b>your</b> voice.";
     }
-    buildExercises(); // rebuild so starting notes pick up the new range
+    buildExercises();        // rebuild so starting notes pick up the new range
+    buildIntervalTrainer();  // ear-training section retunes to the same range
   }
 
   // ================= boot =================
   renderSaved();
   updateWarmupBanner();
-  window.addEventListener("pagehide", stopMic);
+  window.addEventListener("pagehide", function () { stopMic(); stopIntervals(); });
 
   // hooks for automated verification
   window.Pipes = {
@@ -1238,7 +1462,10 @@
     _showScreen: showScreen,
     _startFullTest: function () { captured = {}; showScreen("test"); beginStep(0); },
     _getCaptured: function () { return captured; },
-    _finishTest: finishTest
+    _finishTest: finishTest,
+    _notesPlayed: function () { return notesPlayed; },
+    _intervalPlaying: function () { return intervalCtl != null; },
+    INTERVALS: INTERVALS
   };
 })();
 </script>
