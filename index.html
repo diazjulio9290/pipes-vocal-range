@@ -210,6 +210,20 @@
   .voice-type-box .vt-name { font-size: 1.5rem; font-weight: 800; color: var(--gold); }
   .voice-type-box .vt-blurb { font-size: 0.85rem; color: var(--text); margin-top: 4px; line-height: 1.5; }
   .voice-type-box .vt-famous { font-size: 0.78rem; color: var(--muted); margin-top: 6px; }
+  .vt-switch { display: flex; gap: 6px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .vt-switch button {
+    border: 1px solid rgba(255,200,87,0.35);
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .vt-switch button.on { background: var(--gold); color: #2a1c00; border-color: var(--gold); }
   .redo-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .redo-links button {
     flex: 1 1 45%;
@@ -402,6 +416,18 @@
       <div id="savedResultWrap"></div>
     </div>
 
+    <!-- who's singing screen -->
+    <div id="screenWho" style="display:none;">
+      <div class="card">
+        <h2>Quick question first…</h2>
+        <p>Which sounds more like the singer? This helps compare you to the right voice types — men's (Bass, Baritone, Tenor) or women's (Alto, Mezzo-Soprano, Soprano).</p>
+      </div>
+      <button class="big-btn" id="whoMale">🎙️ Deeper voice — most men</button>
+      <button class="big-btn" id="whoFemale" style="margin-top:10px;">🎙️ Higher voice — most women</button>
+      <button class="big-btn secondary" id="whoAuto" style="margin-top:10px;">🤷 Not sure — compare with all six</button>
+      <button class="big-btn secondary" id="whoBack" style="margin-top:18px;">← Back</button>
+    </div>
+
     <!-- test screen -->
     <div id="screenTest" style="display:none;">
       <div class="step-dots" id="stepDots"></div>
@@ -446,6 +472,7 @@
           <div class="vt-name" id="resVoice">—</div>
           <div class="vt-blurb" id="resBlurb"></div>
           <div class="vt-famous" id="resFamous"></div>
+          <div class="vt-switch" id="vtSwitch"></div>
         </div>
         <div class="kb-scroll" id="kbResScroll"><div class="kb" id="kbRes"></div></div>
         <div class="kb-legend">
@@ -573,17 +600,19 @@
 
   // ================= voice classification =================
   var VOICE_TYPES = [
-    { name: "Bass",          lo: 40, hi: 64, blurb: "The deepest voice type — rich, dark and rumbling.", famous: "Like Barry White or Johnny Cash's low end" },
-    { name: "Baritone",      lo: 43, hi: 65, blurb: "The most common male voice — warm and strong in the middle.", famous: "Like Elvis Presley or John Legend" },
-    { name: "Tenor",         lo: 48, hi: 71, blurb: "The higher male voice — bright and ringing on top.", famous: "Like Freddie Mercury or Bruno Mars" },
-    { name: "Alto",          lo: 53, hi: 77, blurb: "The deeper female voice — warm, velvety low notes.", famous: "Like Amy Winehouse or Cher" },
-    { name: "Mezzo-Soprano", lo: 57, hi: 81, blurb: "The most common female voice — powerful middle register.", famous: "Like Adele or Beyoncé" },
-    { name: "Soprano",       lo: 60, hi: 84, blurb: "The highest voice type — soaring, brilliant top notes.", famous: "Like Mariah Carey or Ariana Grande" }
+    { name: "Bass",          group: "m", lo: 40, hi: 64, blurb: "The deepest voice type — rich, dark and rumbling.", famous: "Like Barry White or Johnny Cash's low end" },
+    { name: "Baritone",      group: "m", lo: 43, hi: 65, blurb: "The most common male voice — warm and strong in the middle.", famous: "Like Elvis Presley or John Legend" },
+    { name: "Tenor",         group: "m", lo: 48, hi: 71, blurb: "The higher male voice — bright and ringing on top.", famous: "Like Freddie Mercury or Bruno Mars" },
+    { name: "Alto",          group: "f", lo: 53, hi: 77, blurb: "The deeper female voice — warm, velvety low notes.", famous: "Like Amy Winehouse or Cher" },
+    { name: "Mezzo-Soprano", group: "f", lo: 57, hi: 81, blurb: "The most common female voice — powerful middle register.", famous: "Like Adele or Beyoncé" },
+    { name: "Soprano",       group: "f", lo: 60, hi: 84, blurb: "The highest voice type — soaring, brilliant top notes.", famous: "Like Mariah Carey or Ariana Grande" }
   ];
-  function classifyVoice(loMidi, hiMidi) {
+  // group: "m" compares against male voice types, "f" against female, null/undefined against all six
+  function classifyVoice(loMidi, hiMidi, group) {
+    var pool = VOICE_TYPES.filter(function (v) { return !group || v.group === group; });
     var best = null, bestScore = -1, second = null, secondScore = -1;
-    for (var i = 0; i < VOICE_TYPES.length; i++) {
-      var vt = VOICE_TYPES[i];
+    for (var i = 0; i < pool.length; i++) {
+      var vt = pool[i];
       var inter = Math.min(hiMidi, vt.hi) - Math.max(loMidi, vt.lo);
       if (inter < 0) inter = 0;
       var union = Math.max(hiMidi, vt.hi) - Math.min(loMidi, vt.lo);
@@ -595,7 +624,7 @@
   }
 
   // ================= keyboard widget =================
-  var KB_LO = 33, KB_HI = 86; // A1 .. D6
+  var KB_LO = 33, KB_HI = 89; // A1 .. F6 (covers soprano high notes)
   var WK_W = 26, BK_W = 16;
   function isWhite(midi) { return [0, 2, 4, 5, 7, 9, 11].indexOf(((midi % 12) + 12) % 12) >= 0; }
   function buildKeyboard(container) {
@@ -646,7 +675,7 @@
 
   // ================= DOM =================
   var $ = function (id) { return document.getElementById(id); };
-  var screenIntro = $("screenIntro"), screenTest = $("screenTest"), screenResults = $("screenResults");
+  var screenIntro = $("screenIntro"), screenWho = $("screenWho"), screenTest = $("screenTest"), screenResults = $("screenResults");
   var stepDotsEl = $("stepDots"), stepTitleEl = $("stepTitle"), stepInstrEl = $("stepInstr");
   var liveNoteEl = $("liveNote"), liveHzEl = $("liveHz"), holdHintEl = $("holdHint"), ringFg = $("ringFg");
   var capturedBtns = $("capturedBtns"), testStatusEl = $("testStatus"), introStatusEl = $("introStatus");
@@ -681,6 +710,7 @@
   var stepIdx = 0;
   var awaitingNext = false;
   var redoMode = false; // true when re-doing a single step from the results screen
+  var voiceGroup = null; // "m" (male types), "f" (female types), null = compare with all six
   var holdDet = new HoldDetector(1200, 0.9);
   var STORE_KEY = "pipes-range-v1";
 
@@ -699,6 +729,7 @@
 
   function showScreen(which) {
     screenIntro.style.display = which === "intro" ? "" : "none";
+    screenWho.style.display = which === "who" ? "" : "none";
     screenTest.style.display = which === "test" ? "" : "none";
     screenResults.style.display = which === "results" ? "" : "none";
   }
@@ -769,21 +800,49 @@
     renderResults(r);
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify({
-        captured: captured, when: new Date().toISOString()
+        captured: captured, group: voiceGroup, when: new Date().toISOString()
       }));
     } catch (e) { /* private mode — results just won't persist */ }
     showScreen("results");
   }
 
+  function saveGroupChoice(g) {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      data.group = g;
+      localStorage.setItem(STORE_KEY, JSON.stringify(data));
+    } catch (e) { /* non-fatal */ }
+  }
+
+  function renderVoiceType(r) {
+    var vt = classifyVoice(r.fullLo, r.fullHi, voiceGroup);
+    $("resVoice").textContent = vt.primary.name + (vt.secondary ? " (close to " + vt.secondary.name + ")" : "");
+    $("resBlurb").textContent = vt.primary.blurb;
+    $("resFamous").textContent = vt.primary.famous;
+    // chips to switch which voice types you're compared against
+    var sw = $("vtSwitch");
+    sw.innerHTML = "";
+    [{ g: "m", lbl: "♂ Men's voices" }, { g: "f", lbl: "♀ Women's voices" }, { g: null, lbl: "All six" }].forEach(function (opt) {
+      var b = document.createElement("button");
+      b.textContent = opt.lbl;
+      if (voiceGroup === opt.g) b.classList.add("on");
+      b.addEventListener("click", function () {
+        voiceGroup = opt.g;
+        saveGroupChoice(opt.g);
+        renderVoiceType(r);
+      });
+      sw.appendChild(b);
+    });
+  }
+
   function renderResults(r) {
-    var vt = classifyVoice(r.fullLo, r.fullHi);
     $("resFull").textContent = midiToName(r.fullLo) + "  to  " + midiToName(r.fullHi);
     $("resComfy").textContent = midiToName(r.comfyLo) + "  to  " + midiToName(r.comfyHi);
     var semis = r.fullHi - r.fullLo;
     $("resSpan").textContent = (semis / 12).toFixed(1) + " octaves";
-    $("resVoice").textContent = vt.primary.name + (vt.secondary ? " (close to " + vt.secondary.name + ")" : "");
-    $("resBlurb").textContent = vt.primary.blurb;
-    $("resFamous").textContent = vt.primary.famous;
+    renderVoiceType(r);
     kbRes.paintRange(r.fullLo, r.fullHi, r.comfyLo, r.comfyHi);
     setTimeout(function () {
       kbRes.scrollTo($("kbResScroll"), (r.fullLo + r.fullHi) / 2);
@@ -804,7 +863,7 @@
     updateWarmupBanner();
   }
 
-  $("retestBtn").addEventListener("click", function () { startFullTest(); });
+  $("retestBtn").addEventListener("click", function () { showScreen("who"); });
   $("goWarmupBtn").addEventListener("click", function () { showTab("warmup"); });
 
   function startFullTest() {
@@ -815,7 +874,12 @@
     testStatusEl.textContent = "";
     startMic(function () { beginStep(0); }, testStatusEl);
   }
-  $("startTestBtn").addEventListener("click", startFullTest);
+  // ask who's singing first, so results compare against the right voice types
+  $("startTestBtn").addEventListener("click", function () { showScreen("who"); });
+  $("whoMale").addEventListener("click", function () { voiceGroup = "m"; startFullTest(); });
+  $("whoFemale").addEventListener("click", function () { voiceGroup = "f"; startFullTest(); });
+  $("whoAuto").addEventListener("click", function () { voiceGroup = null; startFullTest(); });
+  $("whoBack").addEventListener("click", function () { showScreen("intro"); });
 
   // ================= saved result on intro =================
   function loadSaved() {
@@ -835,8 +899,9 @@
     var data = loadSaved();
     if (!data) return;
     captured = data.captured;
+    voiceGroup = data.group === "m" || data.group === "f" ? data.group : null;
     var r = normalizeResults();
-    var vt = classifyVoice(r.fullLo, r.fullHi);
+    var vt = classifyVoice(r.fullLo, r.fullHi, voiceGroup);
     var card = document.createElement("div");
     card.className = "card";
     card.style.marginTop = "14px";
