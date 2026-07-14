@@ -153,6 +153,7 @@
   .ring-note .hz { font-size: 0.75rem; color: var(--muted); margin-top: 4px; min-height: 1em; }
   .hold-hint { text-align: center; font-size: 0.82rem; color: var(--muted); min-height: 1.4em; margin-top: 8px; }
   .hold-hint.good { color: var(--good); font-weight: 700; }
+  .hold-hint.warn { color: var(--gold); font-weight: 700; }
 
   /* ============ PIANO KEYBOARD ============ */
   .kb-scroll { overflow-x: auto; padding: 6px 2px 4px; -webkit-overflow-scrolling: touch; }
@@ -454,6 +455,10 @@
         <button class="big-btn secondary" id="redoStepBtn">↺ Redo</button>
         <button class="big-btn" id="nextStepBtn">Next →</button>
       </div>
+      <div class="btn-row" id="conflictBtns" style="display:none;">
+        <button class="big-btn secondary" id="redoLowBtn">↺ Redo LOW note</button>
+        <button class="big-btn secondary" id="redoHighBtn">↺ Redo HIGH note</button>
+      </div>
       <button class="big-btn secondary" id="cancelTestBtn" style="margin-top:12px;">✖ Cancel test</button>
       <div class="status" id="testStatus"></div>
     </div>
@@ -555,6 +560,12 @@
     }
     var T0 = maxpos;
     if (T0 <= 0) return -1;
+
+    // Octave-error guard: real voices (especially low/croaky male notes) can make the
+    // subharmonic peak at 2x the true period edge out the true one, reading an octave
+    // low. If the half-period peak is nearly as strong, prefer the higher octave.
+    var Th = Math.round(T0 / 2);
+    if (Th > d && c[Th] > 0.9 * c[T0]) T0 = Th;
 
     var x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
     if (x1 !== undefined && x3 !== undefined) {
@@ -711,6 +722,9 @@
   var awaitingNext = false;
   var redoMode = false; // true when re-doing a single step from the results screen
   var voiceGroup = null; // "m" (male types), "f" (female types), null = compare with all six
+  var stepQueue = null;  // steps still to run after a mid-test redo (e.g. redo low, then back to the highs)
+  var lastRms = 0;       // loudness of the last mic frame with no detected pitch (for friendlier hints)
+  var warnUntil = 0;     // keep a warning hint on screen until this time so live hints don't erase it
   var holdDet = new HoldDetector(1200, 0.9);
   var STORE_KEY = "pipes-range-v1";
 
@@ -737,8 +751,10 @@
   function beginStep(i) {
     stepIdx = i;
     awaitingNext = false;
+    warnUntil = 0;
     holdDet.reset();
     capturedBtns.style.display = "none";
+    $("conflictBtns").style.display = "none";
     stepTitleEl.textContent = STEPS[i].title;
     stepInstrEl.textContent = STEPS[i].instr;
     liveNoteEl.textContent = "—";
@@ -750,8 +766,31 @@
     renderDots();
   }
 
-  function onCaptured(midi) {
-    captured[STEPS[stepIdx].key] = midi;
+  function rejectCapture(now, message, showLowRedo) {
+    holdDet.reset();
+    warnUntil = now + 3000; // keep the message readable while they keep singing
+    holdHintEl.className = "hold-hint warn";
+    holdHintEl.textContent = message;
+    ringFg.style.strokeDashoffset = RING_LEN;
+    $("conflictBtns").style.display = "";
+    $("redoLowBtn").style.display = showLowRedo ? "" : "none";
+    $("redoHighBtn").style.display = showLowRedo ? "none" : "";
+  }
+
+  function onCaptured(midi, now) {
+    var key = STEPS[stepIdx].key;
+    // Sanity guards: catch an impossible note NOW (and let the singer fix either side),
+    // instead of failing at the end and blaming the wrong step.
+    if (key === "comfHigh" && captured.comfLow != null && midi <= captured.comfLow) {
+      rejectCapture(now, "That was " + midiToName(midi) + " — not above your easy low (" + midiToName(captured.comfLow) + "). Try a higher note!", true);
+      return; // keep listening — no capture
+    }
+    if (key === "comfLow" && captured.comfHigh != null && midi >= captured.comfHigh) {
+      rejectCapture(now, "That was " + midiToName(midi) + " — not below your easy high (" + midiToName(captured.comfHigh) + "). Try a lower note!", false);
+      return;
+    }
+    $("conflictBtns").style.display = "none";
+    captured[key] = midi;
     awaitingNext = true;
     liveNoteEl.textContent = midiToName(midi);
     liveNoteEl.classList.add("captured");
@@ -766,11 +805,30 @@
 
   $("redoStepBtn").addEventListener("click", function () { beginStep(stepIdx); });
   $("nextStepBtn").addEventListener("click", function () {
+    if (stepQueue && stepQueue.length) { beginStep(stepQueue.shift()); return; }
     if (!redoMode && stepIdx < STEPS.length - 1) beginStep(stepIdx + 1);
     else finishTest();
   });
+
+  // Jump back to redo one side (low = step 0, high = step 2), then continue where we left off.
+  function redoFromConflict(stepToRedo) {
+    var remaining = [];
+    for (var i = 0; i < STEPS.length; i++) {
+      if (i !== stepToRedo && captured[STEPS[i].key] == null) remaining.push(i);
+    }
+    stepQueue = remaining;
+    redoMode = remaining.length === 0; // everything else captured → straight to results after this
+    testStatusEl.className = "status";
+    testStatusEl.textContent = "";
+    beginStep(stepToRedo);
+  }
+  $("redoLowBtn").addEventListener("click", function () { redoFromConflict(0); });
+  $("redoHighBtn").addEventListener("click", function () { redoFromConflict(2); });
   $("cancelTestBtn").addEventListener("click", function () {
     stopMic();
+    stepQueue = null;
+    testStatusEl.className = "status";
+    testStatusEl.textContent = "";
     showScreen("intro");
     renderSaved();
   });
@@ -789,13 +847,26 @@
   }
 
   function finishTest() {
+    // Safety net: never compute results from a missing step — go capture it instead.
+    for (var i = 0; i < STEPS.length; i++) {
+      if (typeof captured[STEPS[i].key] !== "number") { redoMode = false; beginStep(i); return; }
+    }
     var r = normalizeResults();
     if (r.comfyHi <= r.comfyLo || r.fullHi <= r.fullLo) {
+      // Don't assume which side is wrong — show both notes and let the singer pick.
       testStatusEl.className = "status error";
-      testStatusEl.textContent = "Hmm — your high notes came out lower than your low notes. Let's redo the high steps!";
-      beginStep(2);
+      testStatusEl.textContent = "Hmm — I heard your easy low as " + midiToName(captured.comfLow) +
+        " and your easy high as " + midiToName(captured.comfHigh) +
+        ". One of those is probably off — pick one to redo.";
+      capturedBtns.style.display = "none";
+      $("conflictBtns").style.display = "";
+      $("redoLowBtn").style.display = "";
+      $("redoHighBtn").style.display = "";
       return;
     }
+    stepQueue = null;
+    testStatusEl.className = "status";
+    testStatusEl.textContent = "";
     stopMic();
     renderResults(r);
     try {
@@ -855,6 +926,7 @@
       b.innerHTML = "↺ Redo: <b>" + s.title.replace(/^\d+ · /, "") + "</b> (" + midiToName(captured[s.key]) + ")";
       b.addEventListener("click", function () {
         redoMode = true;
+        stepQueue = null;
         showScreen("test");
         startMic(function () { beginStep(i); }, testStatusEl);
       });
@@ -869,6 +941,7 @@
   function startFullTest() {
     captured = {};
     redoMode = false;
+    stepQueue = null;
     showScreen("test");
     testStatusEl.className = "status";
     testStatusEl.textContent = "";
@@ -997,10 +1070,14 @@
     if (awaitingNext) return;
     var res = holdDet.feed(midiFloat, now);
     ringFg.style.strokeDashoffset = String(RING_LEN * (1 - (res.progress || 0)));
-    if (res.captured != null) { onCaptured(res.captured); return; }
+    if (res.captured != null) { onCaptured(res.captured, now); return; }
+    if (now < warnUntil) return; // a warning is on screen — don't overwrite it yet
     if (midiFloat == null) {
       holdHintEl.className = "hold-hint";
-      holdHintEl.textContent = recent.length ? "Keep going…" : "Listening…";
+      if (recent.length) holdHintEl.textContent = "Keep going…";
+      else if (lastRms >= 0.006) holdHintEl.textContent = "I hear you, but can't find a clear note — try a steady “ahh”";
+      else if (lastRms > 0.0015) holdHintEl.textContent = "I can barely hear you — get closer or sing a little louder";
+      else holdHintEl.textContent = "Listening…";
     } else {
       holdHintEl.className = "hold-hint";
       holdHintEl.textContent = res.progress > 0.15 ? "Hold it steady…" : "I hear you — hold that note…";
@@ -1011,6 +1088,14 @@
     if (!analyser || !audioCtx) return;
     analyser.getFloatTimeDomainData(micBuf);
     var freq = detectPitch(micBuf, audioCtx.sampleRate);
+    if (freq <= 0) {
+      // how loud was the frame? (sampled — enough for a hint)
+      var s = 0;
+      for (var i = 0; i < micBuf.length; i += 4) s += micBuf[i] * micBuf[i];
+      lastRms = Math.sqrt(s / (micBuf.length / 4));
+    } else {
+      lastRms = 0;
+    }
     processFrame(freq, performance.now());
     rafId = requestAnimationFrame(loop);
   }
@@ -1532,11 +1617,12 @@
     _processFrame: processFrame,
     _beginStep: beginStep,
     _showScreen: showScreen,
-    _startFullTest: function () { captured = {}; showScreen("test"); beginStep(0); },
+    _startFullTest: function () { captured = {}; redoMode = false; stepQueue = null; showScreen("test"); beginStep(0); },
     _getCaptured: function () { return captured; },
     _finishTest: finishTest,
     _notesPlayed: function () { return notesPlayed; },
     _intervalPlaying: function () { return intervalCtl != null; },
+    _setRms: function (v) { lastRms = v; },
     _playingId: function () { return playing ? playing.id : null; },
     INTERVALS: INTERVALS
   };
