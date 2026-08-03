@@ -323,18 +323,19 @@
   /* ============ INTERVAL TRAINER ============ */
   .iv-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.55; margin-bottom: 14px; }
   .iv-toprow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
-  .iv-repeat {
+  .iv-repeat, .pill-toggle {
     display: inline-flex; align-items: center; gap: 8px;
     background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12);
     border-radius: 999px; padding: 8px 13px; cursor: pointer;
     font-size: 0.82rem; font-weight: 700; color: var(--muted); user-select: none;
     transition: color 0.15s, border-color 0.15s;
   }
-  .iv-repeat .pip { width: 34px; height: 19px; border-radius: 999px; background: rgba(255,255,255,0.15); position: relative; transition: background 0.15s; }
-  .iv-repeat .pip::after { content:""; position:absolute; top:2px; left:2px; width:15px; height:15px; border-radius:50%; background:#fff; transition: transform 0.15s; }
-  .iv-repeat.on { color: var(--gold); border-color: rgba(255,200,87,0.5); }
-  .iv-repeat.on .pip { background: var(--gold); }
-  .iv-repeat.on .pip::after { transform: translateX(15px); }
+  .iv-repeat .pip, .pill-toggle .pip { width: 34px; height: 19px; border-radius: 999px; background: rgba(255,255,255,0.15); position: relative; transition: background 0.15s; }
+  .iv-repeat .pip::after, .pill-toggle .pip::after { content:""; position:absolute; top:2px; left:2px; width:15px; height:15px; border-radius:50%; background:#fff; transition: transform 0.15s; }
+  .iv-repeat.on, .pill-toggle.on { color: var(--gold); border-color: rgba(255,200,87,0.5); }
+  .iv-repeat.on .pip, .pill-toggle.on .pip { background: var(--gold); }
+  .iv-repeat.on .pip::after, .pill-toggle.on .pip::after { transform: translateX(15px); }
+  .iv-modes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
   .iv-root { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
   .iv-root-note { font-weight: 800; color: var(--gold); min-width: 46px; text-align: center; font-size: 1rem; }
   .iv-root-lbl { display: block; font-size: 0.56rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); text-align: center; }
@@ -370,6 +371,83 @@
     background: linear-gradient(180deg, #ff9ec9, var(--rose)); color: #3d0a24;
   }
   .iv-stop:active { transform: translateY(1px); }
+
+  .iv-grid.compact .iv-btn { padding: 10px 4px; }
+  .iv-grid.compact .iv-num { font-size: 1.06rem; }
+  .iv-btn.correct { background: linear-gradient(180deg, #7ff0a8, var(--good)); color: #04331a; box-shadow: 0 0 18px rgba(74,222,128,0.5); }
+  .iv-btn.correct .iv-sub { color: rgba(4,51,26,0.72); }
+  .iv-btn.wrong { background: linear-gradient(180deg, #ffb3b3, var(--bad)); color: #430d0d; }
+  .iv-btn.wrong .iv-sub { color: rgba(67,13,13,0.72); }
+
+  .iv-quizwrap { margin-top: 14px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 14px; }
+  .iv-quizstart { width: 100%; }
+  .iv-quizbar { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; font-size: 0.78rem; margin-top: 10px; min-height: 1.1em; }
+  .iv-quizbar .qb-streak { color: var(--gold); font-weight: 800; }
+  .iv-quizbar .qb-dim { color: var(--muted); }
+  .iv-quiz-stage { text-align: center; margin-top: 10px; min-height: 1.2em; }
+  .iv-quiz-stage .qs-q { display: block; font-weight: 800; color: var(--text); font-size: 0.98rem; }
+  .iv-quiz-stage .qs-q.hit { color: var(--good); }
+  .iv-quiz-stage .qs-q.miss { color: var(--bad); }
+  .iv-quiz-stage .qs-hint { display: block; font-size: 0.8rem; color: var(--muted); margin-top: 4px; line-height: 1.45; }
+  .iv-quiz-stage .qs-again { margin-top: 10px; }
+
+  /* ============ CHORD PROGRESSION TRAINER ============ */
+  .cp-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.55; margin-bottom: 14px; }
+  .cp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .cp-prog {
+    border: 1px solid rgba(255,255,255,0.12);
+    background: linear-gradient(180deg, rgba(124,111,208,0.24), rgba(124,111,208,0.08));
+    border-radius: 14px; padding: 13px 8px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-family: inherit; color: var(--text);
+    transition: transform 0.08s, box-shadow 0.15s, background 0.15s, color 0.15s;
+  }
+  .cp-prog:active { transform: translateY(1px); }
+  .cp-prog-name { font-size: 0.94rem; font-weight: 800; }
+  .cp-prog-tag { font-size: 0.58rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .cp-prog.active {
+    background: linear-gradient(180deg, #ffd97a, var(--gold));
+    color: #2a1c00; box-shadow: 0 0 18px rgba(255,200,87,0.45);
+  }
+  .cp-prog.active .cp-prog-tag { color: rgba(42,28,0,0.72); }
+
+  .cp-modes { display: flex; gap: 6px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .cp-mode {
+    border: 1px solid rgba(255,200,87,0.35); background: transparent; color: var(--muted);
+    font-family: inherit; font-size: 0.72rem; font-weight: 700;
+    padding: 6px 12px; border-radius: 999px; cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .cp-mode.on { background: var(--gold); color: #2a1c00; border-color: var(--gold); }
+  .cp-toprow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+
+  .cp-warn {
+    font-size: 0.76rem; color: var(--gold); background: rgba(255,200,87,0.10);
+    border: 1px solid rgba(255,200,87,0.3); border-radius: 10px;
+    padding: 8px 10px; margin-top: 10px; line-height: 1.45;
+  }
+  .cp-warn.loud { color: var(--bad); background: rgba(255,133,133,0.10); border-color: rgba(255,133,133,0.45); }
+
+  .cp-stage { margin-top: 14px; background: rgba(0,0,0,0.22); border-radius: 12px; padding: 14px 12px; text-align: center; }
+  .cp-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 10px; min-height: 8px; flex-wrap: wrap; }
+  .cp-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.14); transition: background 0.2s, box-shadow 0.2s; }
+  .cp-dot.done { background: var(--good); }
+  .cp-dot.now { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+  .cp-chord { font-size: 2rem; font-weight: 800; color: var(--gold); line-height: 1.1; }
+  .cp-target { font-size: 0.92rem; color: var(--teal); margin-top: 4px; line-height: 1.5; }
+  .cp-target b { color: var(--text); }
+  .cp-listen-bar { height: 8px; border-radius: 6px; background: rgba(0,0,0,0.35); overflow: hidden; margin: 12px 0 8px; }
+  .cp-listen-fill { height: 100%; width: 0%; border-radius: 6px; background: linear-gradient(90deg, var(--gold), var(--rose)); }
+  .cp-phase { font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); min-height: 1em; }
+  .cp-verdict { font-size: 0.88rem; font-weight: 700; margin-top: 8px; min-height: 1.2em; line-height: 1.45; color: var(--muted); }
+  .cp-verdict.hit { color: var(--good); }
+  .cp-verdict.near { color: var(--gold); }
+  .cp-verdict.miss { color: var(--bad); }
+  .cp-verdict.quiet { color: var(--muted); }
+  .cp-score { font-size: 0.78rem; color: var(--muted); margin-top: 6px; min-height: 1em; }
+  .cp-controls { display: flex; gap: 10px; margin-top: 12px; }
+  .cp-controls .play-btn { flex: 1; }
+  .cp-status { margin-top: 6px; }
 
   .range-banner {
     text-align: center;
@@ -500,6 +578,9 @@
       Do the range test first and these exercises will automatically fit <b>your</b> voice.
     </div>
     <div id="exerciseList"></div>
+
+    <div class="section-title">🎹 Chord Progressions <small>Sing the Chord Tones</small></div>
+    <div id="chordTrainer"></div>
 
     <div class="section-title">🎧 Interval Trainer <small>Ear Training · Relative Pitch</small></div>
     <div id="intervalTrainer"></div>
@@ -704,7 +785,7 @@
     tabWarmup.classList.toggle("active", !range);
     panelRange.classList.toggle("active", range);
     panelWarmup.classList.toggle("active", !range);
-    if (range) { resetAllTimers(); stopPlaying(); resetPlayAlongButtons(); stopIntervals(); } // leaving warm-ups — reset to a clean start
+    if (range) { resetAllTimers(); stopOtherAudio(); } // leaving warm-ups — reset to a clean start
     if (!range) stopMic(); // mic isn't needed on the warm-up tab
   }
   tabRange.addEventListener("click", function () { showTab("range"); });
@@ -939,6 +1020,7 @@
   $("goWarmupBtn").addEventListener("click", function () { showTab("warmup"); });
 
   function startFullTest() {
+    stopOtherAudio();   // warm-up audio must release the mic/speakers before the test
     captured = {};
     redoMode = false;
     stepQueue = null;
@@ -997,12 +1079,38 @@
   // ================= audio: mic in =================
   var audioCtx = null, analyser = null, mediaStream = null, rafId = null, micBuf = null;
   var recent = [];
+  // Whoever currently owns mic frames: function (freq, now). The range test installs
+  // processFrame; the chord trainer's grader installs ctFrame. loop() stays feature-blind.
+  var micConsumer = null;
 
-  function startMic(onReady, statusEl) {
-    if (audioCtx && mediaStream) { onReady(); return; }
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  function micErrorMessage(err) {
+    if (err && (err.name === "NotAllowedError" || err.name === "PermissionDeniedError")) {
+      return "Microphone blocked. Tap the 🔒/mic icon in your browser's address bar, allow the microphone, then try again.";
+    }
+    if (err && err.name === "NotFoundError") return "No microphone found on this device.";
+    return "Couldn't start the microphone: " + (err && err.message ? err.message : err);
+  }
+
+  // opts (all optional): { consumer: fn(freq, now), onError: fn(err, message) }
+  // Defaults reproduce the range test's original behaviour exactly.
+  function startMic(onReady, statusEl, opts) {
+    opts = opts || {};
+    var consumer = opts.consumer || processFrame;
+    var onError = opts.onError || function (err, msg) {
       statusEl.className = "status error";
-      statusEl.textContent = "This browser can't access the microphone. Try Chrome, Edge or Safari over HTTPS.";
+      statusEl.textContent = msg;
+      showScreen("intro");
+      introStatusEl.className = statusEl.className;
+      introStatusEl.textContent = statusEl.textContent;
+    };
+    if (audioCtx && mediaStream) {
+      micConsumer = consumer;
+      onReady();
+      if (!rafId) loop();   // revive the rAF if a previous owner stopped it
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      onError(null, "This browser can't access the microphone. Try Chrome, Edge or Safari over HTTPS.");
       return;
     }
     statusEl.className = "status";
@@ -1018,20 +1126,11 @@
       micBuf = new Float32Array(analyser.fftSize);
       source.connect(analyser);
       statusEl.textContent = "";
+      micConsumer = consumer;
       onReady();
       loop();
     }).catch(function (err) {
-      statusEl.className = "status error";
-      if (err && (err.name === "NotAllowedError" || err.name === "PermissionDeniedError")) {
-        statusEl.textContent = "Microphone blocked. Tap the 🔒/mic icon in your browser's address bar, allow the microphone, then try again.";
-      } else if (err && err.name === "NotFoundError") {
-        statusEl.textContent = "No microphone found on this device.";
-      } else {
-        statusEl.textContent = "Couldn't start the microphone: " + (err && err.message ? err.message : err);
-      }
-      showScreen("intro");
-      introStatusEl.className = statusEl.className;
-      introStatusEl.textContent = statusEl.textContent;
+      onError(err, micErrorMessage(err));
     });
   }
 
@@ -1042,6 +1141,9 @@
     mediaStream = null;
     if (audioCtx) audioCtx.close();
     audioCtx = null;
+    analyser = null;
+    micBuf = null;
+    micConsumer = null;
     recent = [];
     kbLive.setLive(-1);
   }
@@ -1096,7 +1198,7 @@
     } else {
       lastRms = 0;
     }
-    processFrame(freq, performance.now());
+    if (micConsumer) micConsumer(freq, performance.now());
     rafId = requestAnimationFrame(loop);
   }
 
@@ -1122,18 +1224,56 @@
       });
     } catch (e) { /* sound is a nicety */ }
   }
-  function playNote(ctx, midi, when, dur) {
+  // dest/level are optional — existing 4-arg callers behave exactly as before.
+  function playNote(ctx, midi, when, dur, dest, level) {
     notesPlayed++;
+    var lvl = level || 0.22;
+    // Scale the envelope to short notes — a fixed 0.08s release would put the sustain
+    // point before the attack (or before zero) and make setValueAtTime throw.
+    var d = Math.max(0.06, dur || 0);
+    var atk = Math.min(0.03, d * 0.4);
+    var rel = Math.min(0.08, d * 0.3);
     var o = ctx.createOscillator(), g = ctx.createGain();
     o.type = "triangle";
     o.frequency.value = midiToFreq(midi);
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(0.22, when + 0.03);
-    g.gain.setValueAtTime(0.22, when + dur - 0.08);
-    g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
-    o.connect(g); g.connect(ctx.destination);
-    o.start(when); o.stop(when + dur + 0.02);
+    g.gain.exponentialRampToValueAtTime(lvl, when + atk);
+    g.gain.setValueAtTime(lvl, when + d - rel);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + d);
+    o.connect(g); g.connect(dest || ctx.destination);
+    o.start(when); o.stop(when + d + 0.02);
     return o;
+  }
+
+  // Play several notes as one chord through a shared master gain.
+  // Stacking voices at playNote's 0.22 would peak near 0.9 and clip, so the master
+  // trims by 0.9/sqrt(n) and a few ms of stagger de-correlates the attacks.
+  function playChord(ctx, midis, when, dur, opts) {
+    opts = opts || {};
+    var n = midis.length;
+    if (!n) return { stop: function () {} };
+    var stagger = opts.stagger == null ? 0.012 : opts.stagger;
+    var master = ctx.createGain();
+    master.gain.value = (0.9 / Math.sqrt(n)) * (opts.level == null ? 1 : opts.level);
+    master.connect(ctx.destination);
+    var oscs = [];
+    for (var i = 0; i < n; i++) {
+      oscs.push(playNote(ctx, midis[i], when + i * stagger, dur - i * stagger, master));
+    }
+    return {
+      oscs: oscs,
+      stop: function (fadeSec) {
+        var f = fadeSec == null ? 0.05 : fadeSec;
+        try {
+          var now = ctx.currentTime;
+          master.gain.cancelScheduledValues(now);
+          master.gain.setTargetAtTime(0.0001, now, 0.01);   // fade, don't click
+          for (var j = 0; j < oscs.length; j++) {
+            try { oscs[j].stop(now + f); } catch (e) {}
+          }
+        } catch (e) {}
+      }
+    };
   }
 
   // ================= warm-up exercises =================
@@ -1197,6 +1337,16 @@
       try { playing.stop(); } catch (e) {}
       playing = null;
     }
+  }
+
+  // Only one warm-up subsystem may make sound at a time. Every subsystem calls this
+  // before it starts, so adding a feature means joining here once instead of in five places.
+  function stopOtherAudio() {
+    stopPlaying();
+    resetPlayAlongButtons();
+    pauseRunningTimers();
+    stopIntervals();
+    stopChordTrainer();
   }
 
   // ---- countdown timer (hum / lip trills) ----
@@ -1290,11 +1440,8 @@
     }
     timerResets.push(resetToIdle);
     function run(fromMs) {
-      pauseRunningTimers();     // only one timer at a time (previous stays resumable)
+      stopOtherAudio();         // silence play-alongs, intervals, chord trainer, other timers
       activeTimers.push(pause); // pause() safely stops this timer
-      stopPlaying();            // silence any play-along tones
-      resetPlayAlongButtons();
-      stopIntervals();          // silence any interval loop
       state = "running";
       remaining = fromMs;
       endAt = performance.now() + fromMs;
@@ -1379,10 +1526,7 @@
 
         playBtn.addEventListener("click", function () {
           if (playing && playing.id === ex.id) { stopPlaying(); playBtn.textContent = "▶ Play"; playBtn.classList.remove("playing"); return; }
-          stopPlaying();
-          resetPlayAlongButtons();
-          pauseRunningTimers();  // don't let a timer keep running behind a play-along
-          stopIntervals();       // silence any interval loop
+          stopOtherAudio();      // this play-along takes over the warm-up audio
           var ctx = getToneCtx();
           var stopped = false, timeoutId = null, oscs = [];
 
@@ -1446,28 +1590,189 @@
     });
   }
 
+  // ================= chord progression trainer =================
+  // chord tone offsets from the chord root, in scale-degree order (root, 3rd, 5th, 7th)
+  var CHORD_TONES = {
+    maj:  [0, 4, 7],
+    min:  [0, 3, 7],
+    dom7: [0, 4, 7, 10],
+    min7: [0, 3, 7, 10],
+    maj7: [0, 4, 7, 11],
+    dim:  [0, 3, 6]
+  };
+  var TONE_LABELS = ["Root", "3rd", "5th", "7th"];
+  // Chord-symbol suffixes. Explicit, because sniffing for a "7" in the quality name
+  // would label a maj7 chord as "C7" — which notates a dominant 7th, a different chord.
+  var CHORD_SUFFIX = { maj: "", min: "m", dom7: "7", min7: "m7", maj7: "maj7", dim: "°" };
+
+  var PROGRESSIONS = [
+    {
+      id: "pop", name: "I – V – vi – IV", tag: "Pop", loops: 2,
+      desc: "The four chords behind a thousand hits. Great first progression — every chord tone sits easy.",
+      chords: [
+        { d: "I",  r: 0, q: "maj" },
+        { d: "V",  r: 7, q: "maj" },
+        { d: "vi", r: 9, q: "min" },
+        { d: "IV", r: 5, q: "maj" }
+      ]
+    },
+    {
+      id: "onefourfive", name: "I – IV – V", tag: "Classic", loops: 2,
+      desc: "Three chords, folk to punk. The V chord is where most singers go flat — listen for it.",
+      chords: [
+        { d: "I",  r: 0, q: "maj" },
+        { d: "IV", r: 5, q: "maj" },
+        { d: "V",  r: 7, q: "maj" }
+      ]
+    },
+    {
+      id: "twofive", name: "ii – V – I", tag: "Jazz", loops: 2,
+      desc: "The jazz cadence. Adds 7ths — those colour tones are the hard ones to hear.",
+      chords: [
+        { d: "ii", r: 2, q: "min7" },
+        { d: "V",  r: 7, q: "dom7" },
+        { d: "I",  r: 0, q: "maj7" }
+      ]
+    },
+    {
+      id: "blues", name: "12-Bar Blues", tag: "Blues · Long", loops: 1,
+      desc: "The whole 12-bar form with dominant 7ths throughout. About a minute — tap ■ Stop any time.",
+      chords: [
+        { d: "I7",  r: 0, q: "dom7" }, { d: "I7",  r: 0, q: "dom7" },
+        { d: "I7",  r: 0, q: "dom7" }, { d: "I7",  r: 0, q: "dom7" },
+        { d: "IV7", r: 5, q: "dom7" }, { d: "IV7", r: 5, q: "dom7" },
+        { d: "I7",  r: 0, q: "dom7" }, { d: "I7",  r: 0, q: "dom7" },
+        { d: "V7",  r: 7, q: "dom7" }, { d: "IV7", r: 5, q: "dom7" },
+        { d: "I7",  r: 0, q: "dom7" }, { d: "V7",  r: 7, q: "dom7" }
+      ]
+    }
+  ];
+
+  var CT_TARGET_MODES = [
+    { id: "root",   lbl: "Roots",     idx: 0 },
+    { id: "third",  lbl: "3rds",      idx: 1 },
+    { id: "fifth",  lbl: "5ths",      idx: 2 },
+    { id: "random", lbl: "Mix it up", idx: -1 }   // -1 = pick at random from the chord's tones
+  ];
+
+  var ctProg = null;         // the PROGRESSIONS entry in play
+  var ctState = "idle";      // idle | chord | gap | listen | reveal | done
+  var ctIdx = 0;             // index into ctProg.chords
+  var ctLoopN = 0;           // which pass through the progression
+  var ctKey = 0;             // tonic pitch class
+  var ctTargetMode = "root";
+  var ctTarget = null;       // { midi, label, chordName }
+  var ctGrading = false;     // "Grade me 🎤" toggle
+  var ctListening = false;   // true ONLY inside the listen window
+  var ctOwnsMic = false;
+  var ctSamples = [];        // {t, m} collected during the listen window
+  var ctRecent = [];         // the grader's OWN median buffer — never touch the range test's recent[]
+  var ctChordCtl = null;
+  var ctTimer = null;
+  var ctStopped = true;
+  var ctLastVerdict = null;
+  var ctBleedWarned = false;
+  var ctScore = { asked: 0, hits: 0, streak: 0, best: 0 };
+  var CT_T = { chord: 1600, gap: 260, listen: 2000, reveal: 900, lead: 120 };
+
+  // Fold a pitch into the singer's comfy octave.
+  function snapToRange(midi, lo, hi) {
+    var center = (lo + hi) / 2;
+    while (midi - center > 6) midi -= 12;
+    while (center - midi > 6) midi += 12;
+    if (midi < lo) midi += 12;
+    if (midi > hi) midi -= 12;
+    if (midi < KB_LO) midi += 12;
+    if (midi > KB_HI) midi -= 12;
+    return Math.max(KB_LO, Math.min(KB_HI, midi));
+  }
+  // Chords are voiced BELOW the singer (A2–G#3) so they never mask the target note.
+  function ctKeyRoot(r) {
+    var pc = r ? (((r.comfyLo % 12) + 12) % 12) : 0;
+    var accomp = 45 + (((pc - 45) % 12) + 12) % 12;   // lowest pitch-class match at/above A2
+    if (accomp > 56) accomp -= 12;
+    return { pc: pc, accomp: accomp };
+  }
+  function ctChordMidis(accompRoot, ch) {
+    var tones = CHORD_TONES[ch.q] || CHORD_TONES.maj;
+    var out = [];
+    for (var i = 0; i < tones.length; i++) out.push(accompRoot + ch.r + tones[i]);
+    if (tones.length === 3) out.push(accompRoot + ch.r + 12);   // keep density near 4 voices
+    return out;
+  }
+
   // ================= interval trainer (ear training) =================
   var INTERVALS = [
-    { name: "2nd",    sub: "Major",     semi: 2,  hint: "the first two notes of “Happy Birthday”" },
-    { name: "3rd",    sub: "Major",     semi: 4,  hint: "the start of “When the Saints Go Marching In”" },
-    { name: "4th",    sub: "Perfect",   semi: 5,  hint: "“Here Comes the Bride”" },
-    { name: "5th",    sub: "Perfect",   semi: 7,  hint: "“Twinkle, Twinkle” or the Star Wars theme" },
-    { name: "6th",    sub: "Major",     semi: 9,  hint: "“My Bonnie Lies Over the Ocean”" },
-    { name: "7th",    sub: "Major",     semi: 11, hint: "the big stretch in the “Take On Me” chorus" },
-    { name: "Octave", sub: "Perfect 8", semi: 12, hint: "“Some-where” in “Over the Rainbow”" }
+    { name: "m2",      short: "♭2", sub: "Minor 2nd",   semi: 1,  hint: "the “Jaws” theme",                              dhint: "the opening of “Für Elise”" },
+    { name: "2nd",     short: "2",  sub: "Major 2nd",   semi: 2,  hint: "the first two notes of “Happy Birthday”",       dhint: "“Mary Had a Little Lamb”" },
+    { name: "m3",      short: "♭3", sub: "Minor 3rd",   semi: 3,  hint: "“Greensleeves”",                                dhint: "“Hey Jude”" },
+    { name: "3rd",     short: "3",  sub: "Major 3rd",   semi: 4,  hint: "the start of “When the Saints Go Marching In”", dhint: "“Swing Low, Sweet Chariot”" },
+    { name: "4th",     short: "4",  sub: "Perfect 4th", semi: 5,  hint: "“Here Comes the Bride”",                        dhint: "“O Come All Ye Faithful”" },
+    { name: "Tritone", short: "♭5", sub: "Tritone",     semi: 6,  hint: "“Ma-ri-a” from West Side Story",                dhint: "the “Simpsons” theme leap, upside-down" },
+    { name: "5th",     short: "5",  sub: "Perfect 5th", semi: 7,  hint: "“Twinkle, Twinkle” or the Star Wars theme",     dhint: "the “Flintstones” theme" },
+    { name: "m6",      short: "♭6", sub: "Minor 6th",   semi: 8,  hint: "the “Love Story” theme",                        dhint: "“Where Do I Begin”" },
+    { name: "6th",     short: "6",  sub: "Major 6th",   semi: 9,  hint: "“My Bonnie Lies Over the Ocean”",               dhint: "“Nobody Knows the Trouble I've Seen”" },
+    { name: "m7",      short: "♭7", sub: "Minor 7th",   semi: 10, hint: "the original “Star Trek” theme",                dhint: "“Watermelon Man”" },
+    { name: "7th",     short: "7",  sub: "Major 7th",   semi: 11, hint: "the big stretch in the “Take On Me” chorus",    dhint: "“I Love You” (Cole Porter)" },
+    { name: "Octave",  short: "8",  sub: "Perfect 8ve", semi: 12, hint: "“Some-where” in “Over the Rainbow”",            dhint: "“Willow Weep for Me”" }
   ];
   var intervalCtl = null;   // { stop } for the currently sounding interval
   var ivRepeat = false;     // loop toggle
   var ivRoot = 57;          // starting (lower) note, MIDI
+  // Mode flags + quiz stats live at module scope so they survive the DOM rebuild
+  // that updateWarmupBanner() triggers whenever the saved range changes.
+  var ivDescending = false;
+  var ivHarmonic = false;
+  var ivQuiz = false;
+  var ivQuizSemi = -1;       // the answer to the current question
+  var ivQuizState = "idle";  // idle | playing | awaiting | feedback
+  var ivQuizRoot = 57;
+  var ivQuizPrev = -1;       // don't ask the same interval twice in a row
+  var ivQuizDesc = false;    // direction of the current question
+  var ivQuizScore = { asked: 0, right: 0, streak: 0, best: 0 };
+  var ivQuizTimer = null;
+  var ivQuizApi = null;      // { start, stop, ask, answer } — rebound on every buildIntervalTrainer()
+
+  function ivFind(semi) {
+    for (var i = 0; i < INTERVALS.length; i++) if (INTERVALS[i].semi === semi) return INTERVALS[i];
+    return null;
+  }
+  function ivHintFor(iv, descending) {
+    if (!descending) return iv.hint;
+    return iv.dhint || (iv.hint + " — heard upside-down");
+  }
+
+  // One pass of an interval. Melodic plays the two notes in order; harmonic sounds them together.
+  function playIntervalOnce(ctx, root, semi, harmonic, descending) {
+    var oscs = [], periodMs;
+    if (harmonic) {
+      var dur = 0.9;
+      var ctl = playChord(ctx, [root, root + semi], ctx.currentTime + 0.03, dur);
+      oscs = ctl.oscs || [];
+      periodMs = (dur + 0.7) * 1000;
+    } else {
+      var noteDur = 0.55, gap = 0.06;
+      var t = ctx.currentTime + 0.03;
+      var lo = root, hi = root + semi;
+      var first = descending ? hi : lo, second = descending ? lo : hi;
+      oscs.push(playNote(ctx, first, t, noteDur));
+      oscs.push(playNote(ctx, second, t + noteDur + gap, noteDur));
+      periodMs = (noteDur * 2 + gap + 0.7) * 1000;
+    }
+    return { oscs: oscs, periodMs: periodMs };
+  }
 
   function stopIntervals() {
     if (intervalCtl) { try { intervalCtl.stop(); } catch (e) {} intervalCtl = null; }
+    if (ivQuizTimer) { clearTimeout(ivQuizTimer); ivQuizTimer = null; }
+    ivQuizState = "idle";
     var box = $("intervalTrainer");
     if (!box) return;
-    var actives = box.querySelectorAll(".iv-btn.active");
-    for (var i = 0; i < actives.length; i++) actives[i].classList.remove("active");
+    var actives = box.querySelectorAll(".iv-btn.active, .iv-btn.correct, .iv-btn.wrong");
+    for (var i = 0; i < actives.length; i++) actives[i].classList.remove("active", "correct", "wrong");
+    // In quiz mode the question lives in .iv-quiz-stage; leave .iv-now's explore copy alone.
     var now = box.querySelector(".iv-now");
-    if (now) now.innerHTML = "<span class='iv-now-hint'>Tap an interval to hear it, then try to sing the second note back.</span>";
+    if (now && !ivQuiz) now.innerHTML = "<span class='iv-now-hint'>Tap an interval to hear it, then try to sing the second note back.</span>";
   }
 
   function buildIntervalTrainer() {
@@ -1488,7 +1793,7 @@
     var top = document.createElement("div");
     top.className = "iv-toprow";
     var rep = document.createElement("div");
-    rep.className = "iv-repeat" + (ivRepeat ? " on" : "");
+    rep.className = "iv-repeat pill-toggle" + (ivRepeat ? " on" : "");
     rep.innerHTML = "<span class='pip'></span><span class='rep-lbl'>Repeat: " + (ivRepeat ? "On" : "Off") + "</span>";
     var rootWrap = document.createElement("div");
     rootWrap.className = "iv-root";
@@ -1500,14 +1805,27 @@
     top.appendChild(rootWrap);
     card.appendChild(top);
 
+    // direction + harmonic toggles
+    var modes = document.createElement("div");
+    modes.className = "iv-modes";
+    var dirT = document.createElement("div");
+    dirT.className = "pill-toggle" + (ivDescending ? " on" : "");
+    dirT.innerHTML = "<span class='pip'></span><span class='dir-lbl'>" + (ivDescending ? "↓ Descending" : "↑ Ascending") + "</span>";
+    var harmT = document.createElement("div");
+    harmT.className = "pill-toggle" + (ivHarmonic ? " on" : "");
+    harmT.innerHTML = "<span class='pip'></span><span class='harm-lbl'>" + (ivHarmonic ? "Harmonic" : "Melodic") + "</span>";
+    modes.appendChild(dirT);
+    modes.appendChild(harmT);
+    card.appendChild(modes);
+
     var grid = document.createElement("div");
-    grid.className = "iv-grid";
+    grid.className = "iv-grid compact";
     INTERVALS.forEach(function (iv) {
       var b = document.createElement("button");
       b.className = "iv-btn";
       b.dataset.semi = iv.semi;
       b.dataset.name = iv.name;
-      b.innerHTML = "<span class='iv-num'>" + iv.name + "</span><span class='iv-sub'>" + iv.sub + "</span>";
+      b.innerHTML = "<span class='iv-num'>" + iv.short + "</span><span class='iv-sub'>" + iv.sub + "</span>";
       grid.appendChild(b);
     });
     card.appendChild(grid);
@@ -1516,6 +1834,21 @@
     now.className = "iv-now";
     now.innerHTML = "<span class='iv-now-hint'>Tap an interval to hear it, then try to sing the second note back.</span>";
     card.appendChild(now);
+
+    // ---- quiz ----
+    var quizWrap = document.createElement("div");
+    quizWrap.className = "iv-quizwrap";
+    var quizBtn = document.createElement("button");
+    quizBtn.className = "play-btn iv-quizstart";
+    quizBtn.textContent = ivQuiz ? "■ Stop Quiz" : "🎲 Start Quiz";
+    var quizBar = document.createElement("div");
+    quizBar.className = "iv-quizbar";
+    var quizStage = document.createElement("div");
+    quizStage.className = "iv-quiz-stage";
+    quizWrap.appendChild(quizBtn);
+    quizWrap.appendChild(quizBar);
+    quizWrap.appendChild(quizStage);
+    card.appendChild(quizWrap);
 
     box.appendChild(card);
 
@@ -1539,54 +1872,596 @@
       rep.classList.toggle("on", ivRepeat);
       repLbl.textContent = "Repeat: " + (ivRepeat ? "On" : "Off");
     });
+    var dirLbl = dirT.querySelector(".dir-lbl");
+    dirT.addEventListener("click", function () {
+      ivDescending = !ivDescending;
+      dirT.classList.toggle("on", ivDescending);
+      dirLbl.textContent = ivDescending ? "↓ Descending" : "↑ Ascending";
+      stopIntervals();
+    });
+    var harmLbl = harmT.querySelector(".harm-lbl");
+    harmT.addEventListener("click", function () {
+      ivHarmonic = !ivHarmonic;
+      harmT.classList.toggle("on", ivHarmonic);
+      harmLbl.textContent = ivHarmonic ? "Harmonic" : "Melodic";
+      stopIntervals();
+    });
+
+    // ---- explore mode: tap an interval to hear it ----
+    function playExplore(b, semi) {
+      var iv = ivFind(semi);
+      if (!iv) return;
+      b.classList.add("active");
+      var loNote = midiToName(ivRoot), hiNote = midiToName(ivRoot + semi);
+      var arrow = ivHarmonic ? " + " : (ivDescending ? "→" : "→");
+      var pair = ivHarmonic ? (loNote + arrow + hiNote)
+                            : (ivDescending ? hiNote + arrow + loNote : loNote + arrow + hiNote);
+      now.innerHTML =
+        "<span class='iv-now-name'>" + iv.sub + " · " + pair + "</span>" +
+        "<span class='iv-now-hint'>" +
+        (ivHarmonic ? "Both notes together — hear the gap inside the sound."
+                    : "Sounds like " + ivHintFor(iv, ivDescending)) +
+        (ivRepeat ? " · looping" : "") + "</span>" +
+        "<button class='iv-stop'>■ Stop</button>";
+      now.querySelector(".iv-stop").addEventListener("click", stopIntervals);
+
+      var ctx = getToneCtx();
+      var stopped = false, timeoutId = null, oscs = [];
+      function playRep() {
+        if (stopped) return;
+        var pass = playIntervalOnce(ctx, ivRoot, semi, ivHarmonic, ivDescending);
+        oscs = pass.oscs;
+        if (ivRepeat) timeoutId = setTimeout(playRep, pass.periodMs);
+        else timeoutId = setTimeout(function () { if (!stopped) stopIntervals(); }, pass.periodMs);
+      }
+      playRep();
+      intervalCtl = {
+        stop: function () {
+          stopped = true;
+          if (timeoutId) clearTimeout(timeoutId);
+          oscs.forEach(function (o) { try { o.stop(); } catch (e) {} });
+        }
+      };
+    }
+
+    // ---- quiz mode ----
+    function renderQuizBar() {
+      if (!ivQuizScore.asked) {
+        quizBar.innerHTML = ivQuiz ? "<span class='qb-dim'>Listen, then tap the interval you heard.</span>" : "";
+        return;
+      }
+      var pct = Math.round(100 * ivQuizScore.right / ivQuizScore.asked);
+      quizBar.innerHTML =
+        "<span class='qb-streak'>Streak " + ivQuizScore.streak + "</span>" +
+        "<span class='qb-dim'>Best " + ivQuizScore.best + "</span>" +
+        "<span class='qb-dim'>" + ivQuizScore.right + "/" + ivQuizScore.asked + " (" + pct + "%)</span>";
+    }
+    function quizReplay() {
+      if (ivQuizSemi < 0) return;
+      if (intervalCtl) { try { intervalCtl.stop(); } catch (e) {} intervalCtl = null; }
+      var ctx = getToneCtx();
+      var pass = playIntervalOnce(ctx, ivQuizRoot, ivQuizSemi, ivHarmonic, ivQuizDesc);
+      var oscs = pass.oscs;
+      intervalCtl = { stop: function () { oscs.forEach(function (o) { try { o.stop(); } catch (e) {} }); } };
+      return pass.periodMs;
+    }
+    function quizAsk(forceSemi) {
+      if (!ivQuiz) return;
+      if (ivQuizTimer) { clearTimeout(ivQuizTimer); ivQuizTimer = null; }
+      var pool = INTERVALS;
+      var semi;
+      if (forceSemi != null) semi = forceSemi;
+      else {
+        semi = pool[Math.floor(Math.random() * pool.length)].semi;
+        if (semi === ivQuizPrev) semi = pool[Math.floor(Math.random() * pool.length)].semi;
+      }
+      ivQuizPrev = semi;
+      ivQuizSemi = semi;
+      ivQuizDesc = ivDescending;
+      // Roam the root so the answer can't be memorised as an absolute pitch.
+      ivQuizRoot = ivRoot + (Math.floor(Math.random() * 11) - 5);
+      if (ivQuizRoot < KB_LO) ivQuizRoot = KB_LO;
+      if (ivQuizRoot > KB_HI - 12) ivQuizRoot = KB_HI - 12;
+
+      var actives = grid.querySelectorAll(".iv-btn");
+      for (var i = 0; i < actives.length; i++) actives[i].classList.remove("active", "correct", "wrong");
+
+      ivQuizState = "playing";
+      quizStage.innerHTML = "<span class='qs-q'>🎧 Listening…</span><span class='qs-hint'>Which interval was that?</span>";
+      var periodMs = quizReplay();
+      ivQuizTimer = setTimeout(function () {
+        if (!ivQuiz) return;
+        ivQuizState = "awaiting";
+        quizStage.innerHTML =
+          "<span class='qs-q'>Which interval was that?</span>" +
+          "<button class='iv-stop qs-again'>🔁 Hear it again</button>";
+        var again = quizStage.querySelector(".qs-again");
+        if (again) again.addEventListener("click", function () { quizReplay(); });
+      }, periodMs);
+    }
+    function quizAnswer(semi) {
+      if (ivQuizState !== "awaiting") return;   // guards double-taps and answers mid-playback
+      ivQuizState = "feedback";
+      var correct = semi === ivQuizSemi;
+      ivQuizScore.asked++;
+      if (correct) {
+        ivQuizScore.right++;
+        ivQuizScore.streak++;
+        if (ivQuizScore.streak > ivQuizScore.best) ivQuizScore.best = ivQuizScore.streak;
+      } else {
+        ivQuizScore.streak = 0;
+      }
+      var btnList = grid.querySelectorAll(".iv-btn");
+      for (var i = 0; i < btnList.length; i++) {
+        var s = Number(btnList[i].dataset.semi);
+        if (s === ivQuizSemi) btnList[i].classList.add("correct");
+        else if (s === semi) btnList[i].classList.add("wrong");
+      }
+      var iv = ivFind(ivQuizSemi);
+      quizStage.innerHTML =
+        "<span class='qs-q " + (correct ? "hit" : "miss") + "'>" +
+        (correct ? "✓ Yes — " : "✗ It was a ") + iv.sub + "</span>" +
+        "<span class='qs-hint'>" +
+        (ivHarmonic ? "Both notes together." : "Sounds like " + ivHintFor(iv, ivQuizDesc)) + "</span>";
+      renderQuizBar();
+      ivQuizTimer = setTimeout(function () { quizAsk(); }, 1400);
+    }
+    function quizStart() {
+      stopOtherAudio();
+      ivQuiz = true;
+      quizBtn.textContent = "■ Stop Quiz";
+      quizWrap.classList.add("on");
+      now.innerHTML = "<span class='iv-now-hint'>Quiz running — the buttons above are your answers.</span>";
+      renderQuizBar();
+      quizAsk();
+    }
+    function quizStop() {
+      ivQuiz = false;
+      quizBtn.textContent = "🎲 Start Quiz";
+      quizWrap.classList.remove("on");
+      quizStage.innerHTML = "";
+      stopIntervals();
+      renderQuizBar();
+      now.innerHTML = "<span class='iv-now-hint'>Tap an interval to hear it, then try to sing the second note back.</span>";
+    }
+    quizBtn.addEventListener("click", function () { if (ivQuiz) quizStop(); else quizStart(); });
+    renderQuizBar();
+    if (ivQuiz) { quizWrap.classList.add("on"); }
 
     var btns = grid.querySelectorAll(".iv-btn");
     for (var bi = 0; bi < btns.length; bi++) {
       (function (b) {
         b.addEventListener("click", function () {
-          var wasActive = b.classList.contains("active");
-          // stop this + any other warm-up audio
-          stopIntervals();
-          stopPlaying();
-          resetPlayAlongButtons();
-          pauseRunningTimers();
-          if (wasActive) return; // tapping the lit interval turns it off
-
           var semi = Number(b.dataset.semi);
-          var iv = INTERVALS.filter(function (x) { return x.semi === semi; })[0];
-          b.classList.add("active");
-          now.innerHTML =
-            "<span class='iv-now-name'>" + iv.sub + " " + iv.name +
-            " · " + midiToName(ivRoot) + "→" + midiToName(ivRoot + semi) + "</span>" +
-            "<span class='iv-now-hint'>Sounds like " + iv.hint +
-            (ivRepeat ? " · looping" : "") + "</span>" +
-            "<button class='iv-stop'>■ Stop</button>";
-          now.querySelector(".iv-stop").addEventListener("click", stopIntervals);
-
-          var ctx = getToneCtx();
-          var stopped = false, timeoutId = null, oscs = [];
-          function playRep() {
-            if (stopped) return;
-            oscs.length = 0;
-            var noteDur = 0.55, gap = 0.06;
-            var t = ctx.currentTime + 0.03;
-            oscs.push(playNote(ctx, ivRoot, t, noteDur));
-            oscs.push(playNote(ctx, ivRoot + semi, t + noteDur + gap, noteDur));
-            var periodMs = (noteDur * 2 + gap + 0.7) * 1000; // sound + rest
-            if (ivRepeat) timeoutId = setTimeout(playRep, periodMs);
-            else timeoutId = setTimeout(function () { if (!stopped) stopIntervals(); }, periodMs);
-          }
-          playRep();
-          intervalCtl = {
-            stop: function () {
-              stopped = true;
-              if (timeoutId) clearTimeout(timeoutId);
-              oscs.forEach(function (o) { try { o.stop(); } catch (e) {} });
-            }
-          };
+          if (ivQuiz) { quizAnswer(semi); return; }   // in quiz mode the grid answers questions
+          var wasActive = b.classList.contains("active");
+          stopOtherAudio();                            // this interval takes over warm-up audio
+          if (wasActive) return;                       // tapping the lit interval turns it off
+          playExplore(b, semi);
         });
       })(btns[bi]);
     }
+
+    // expose quiz controls for the test hooks
+    ivQuizApi = { start: quizStart, stop: quizStop, ask: quizAsk, answer: quizAnswer };
+  }
+
+  // ================= chord trainer: engine =================
+  function ctEls() {
+    var box = $("chordTrainer");
+    if (!box) return null;
+    return {
+      box: box,
+      chord:  box.querySelector(".cp-chord"),
+      target: box.querySelector(".cp-target"),
+      phase:  box.querySelector(".cp-phase"),
+      dots:   box.querySelector(".cp-dots"),
+      bar:    box.querySelector(".cp-listen-fill"),
+      verdict:box.querySelector(".cp-verdict"),
+      score:  box.querySelector(".cp-score"),
+      status: box.querySelector(".cp-status"),
+      warn:   box.querySelector(".cp-warn"),
+      start:  box.querySelector(".cp-start")
+    };
+  }
+
+  function stopChordTrainer() {
+    ctStopped = true;
+    if (ctTimer) { clearTimeout(ctTimer); ctTimer = null; }
+    if (ctChordCtl) { try { ctChordCtl.stop(0.05); } catch (e) {} ctChordCtl = null; }
+    ctState = "idle";
+    ctListening = false;
+    ctSamples.length = 0;
+    ctRecent.length = 0;
+    if (ctOwnsMic) { stopMic(); ctOwnsMic = false; }
+    var e = ctEls();
+    if (!e) return;
+    if (e.start) { e.start.textContent = "▶ Start"; e.start.classList.remove("playing"); }
+    if (e.bar) e.bar.style.width = "0%";
+    if (e.phase) e.phase.textContent = "";
+    var actives = e.box.querySelectorAll(".cp-prog.active");
+    for (var i = 0; i < actives.length; i++) actives[i].classList.remove("active");
+  }
+
+  // mic consumer for grading — deliberately uses its own smoothing buffer
+  function ctFrame(freq, now) {
+    if (!ctListening) return;
+    if (freq <= 0 || freq < 55 || freq > 1500) return;
+    ctRecent.push(freq);
+    if (ctRecent.length > 5) ctRecent.shift();
+    ctSamples.push({ t: now, m: freqToMidiFloat(median(ctRecent)) });
+  }
+
+  function ctGrade() {
+    var e = ctEls();
+    if (!ctTarget) return null;
+    // Drop the first 300ms: vocal onset scoop, plus any chord tail the gap didn't cover.
+    var t0 = ctSamples.length ? ctSamples[0].t : 0;
+    var usable = [];
+    for (var i = 0; i < ctSamples.length; i++) {
+      if (ctSamples[i].t - t0 >= 300) usable.push(ctSamples[i].m);
+    }
+    var v;
+    if (usable.length < 8) {
+      v = { verdict: "quiet", msg: "Didn't quite hear you — get closer to the mic and give it a steady “ah”." };
+    } else {
+      var sung = median(usable);
+      var delta = sung - ctTarget.midi;
+      var oct = Math.round(delta / 12);
+      var folded = delta - oct * 12;
+      var cents = Math.round(folded * 100);
+      var sungName = midiToName(Math.round(sung));
+      var dir = cents > 0 ? "sharp" : "flat";
+      var octNote = "";
+      var absC = Math.abs(cents);
+      if (absC <= 30) {
+        v = { verdict: "hit", cents: cents, msg: "Spot on ✓ " + sungName + (absC > 6 ? " (" + (cents > 0 ? "+" : "") + cents + "¢)" : "") };
+      } else if (absC <= 60) {
+        v = { verdict: "near", cents: cents, msg: "Very close — just a touch " + dir + " (" + absC + "¢)" };
+      } else {
+        v = { verdict: "miss", cents: cents,
+              msg: "♪ " + (absC / 100).toFixed(1) + " semitones " + dir + " — you sang " + sungName + ", target was " + midiToName(ctTarget.midi) };
+      }
+      // Right pitch class, wrong octave still counts — singers transpose octaves legitimately.
+      if (oct !== 0 && absC <= 30) {
+        octNote = " (right note, one octave " + (oct > 0 ? "up" : "down") + ") — that counts";
+        v.msg += octNote;
+      }
+    }
+    ctLastVerdict = v;
+    ctScore.asked++;
+    if (v.verdict === "hit") {
+      ctScore.hits++;
+      ctScore.streak++;
+      if (ctScore.streak > ctScore.best) ctScore.best = ctScore.streak;
+    } else if (v.verdict === "miss" || v.verdict === "near") {
+      ctScore.streak = 0;
+    }
+    if (e && e.verdict) {
+      e.verdict.className = "cp-verdict " + v.verdict;
+      e.verdict.textContent = v.msg;
+    }
+    if (e && e.score && ctScore.asked) {
+      var pct = Math.round(100 * ctScore.hits / ctScore.asked);
+      e.score.textContent = "Streak " + ctScore.streak + " · Best " + ctScore.best + " · " + ctScore.hits + "/" + ctScore.asked + " (" + pct + "%)";
+    }
+    return v;
+  }
+
+  function ctRenderDots() {
+    var e = ctEls();
+    if (!e || !e.dots || !ctProg) return;
+    var html = "";
+    for (var i = 0; i < ctProg.chords.length; i++) {
+      var cls = i < ctIdx ? "cp-dot done" : (i === ctIdx ? "cp-dot now" : "cp-dot");
+      html += "<span class='" + cls + "'></span>";
+    }
+    e.dots.innerHTML = html;
+  }
+
+  function ctPhaseChord() {
+    if (ctStopped) return;
+    var e = ctEls();
+    var ch = ctProg.chords[ctIdx];
+    var tones = CHORD_TONES[ch.q] || CHORD_TONES.maj;
+    var modeDef = null;
+    for (var i = 0; i < CT_TARGET_MODES.length; i++) if (CT_TARGET_MODES[i].id === ctTargetMode) modeDef = CT_TARGET_MODES[i];
+    var ti = (!modeDef || modeDef.idx < 0) ? Math.floor(Math.random() * tones.length)
+                                           : Math.min(modeDef.idx, tones.length - 1);
+    var r = getComfyRange();
+    var lo = r ? r.comfyLo : 48, hi = r ? r.comfyHi : 60;
+    if (hi - lo < 4) hi = lo + 4;
+    var key = ctKeyRoot(r);
+    var raw = key.accomp + ch.r + tones[ti];
+    ctTarget = { midi: snapToRange(raw, lo, hi), label: TONE_LABELS[ti] || "tone", chordName: ch.d };
+
+    ctState = "chord";
+    ctListening = false;
+    ctSamples.length = 0;
+    ctRecent.length = 0;
+    ctRenderDots();
+    if (e) {
+      var letter = midiToName(key.accomp + ch.r).replace(/-?\d+$/, "");
+      e.chord.textContent = ch.d + "  " + letter + (CHORD_SUFFIX[ch.q] || "");
+      e.target.innerHTML = "Sing the <b>" + ctTarget.label + "</b>";
+      e.phase.textContent = "Listen to the chord";
+      e.verdict.className = "cp-verdict";
+      e.verdict.textContent = "";
+      if (e.bar) e.bar.style.width = "0%";
+    }
+    var ctx = getToneCtx();
+    var when = ctx.currentTime + CT_T.lead / 1000;
+    var midis = ctChordMidis(key.accomp, ch);
+    if (ctChordCtl) { try { ctChordCtl.stop(0.03); } catch (e2) {} }
+    ctChordCtl = playChord(ctx, midis, when, Math.max(0.2, CT_T.chord / 1000 - 0.15), { level: ctGrading ? 0.7 : 1 });
+    ctTimer = setTimeout(ctPhaseGap, CT_T.chord);
+  }
+
+  function ctPhaseGap() {
+    if (ctStopped) return;
+    ctState = "gap";
+    var e = ctEls();
+    if (e) e.phase.textContent = "…";
+    ctTimer = setTimeout(ctPhaseListen, CT_T.gap);
+  }
+
+  function ctPhaseListen() {
+    if (ctStopped) return;
+    ctState = "listen";
+    ctSamples.length = 0;
+    ctRecent.length = 0;
+    ctListening = ctGrading;
+    var e = ctEls();
+    if (e) {
+      e.phase.textContent = ctGrading ? "🎤 Your turn — sing it" : "Your turn — sing it";
+      if (e.bar) {
+        e.bar.style.transition = "none";
+        e.bar.style.width = "0%";
+        // next frame: animate the fill across the listen window
+        setTimeout(function () {
+          if (ctStopped || !e.bar) return;
+          e.bar.style.transition = "width " + (CT_T.listen / 1000) + "s linear";
+          e.bar.style.width = "100%";
+        }, 20);
+      }
+    }
+    ctTimer = setTimeout(ctPhaseReveal, CT_T.listen);
+  }
+
+  function ctPhaseReveal() {
+    if (ctStopped) return;
+    ctState = "reveal";
+    ctListening = false;
+    var e = ctEls();
+    if (ctGrading) ctGrade();
+    if (e) {
+      e.phase.textContent = "The answer";
+      e.target.innerHTML = "<b>" + ctTarget.label + "</b> of " + ctTarget.chordName + " = <b>" + midiToName(ctTarget.midi) + "</b>";
+      if (e.bar) { e.bar.style.transition = "none"; e.bar.style.width = "0%"; }
+      if (!ctGrading) {
+        e.verdict.className = "cp-verdict";
+        e.verdict.textContent = "How close were you?";
+      }
+    }
+    try {
+      var ctx = getToneCtx();
+      playNote(ctx, ctTarget.midi, ctx.currentTime + 0.03, 0.7, null, ctGrading ? 0.14 : 0.18);
+    } catch (e3) {}
+    ctTimer = setTimeout(ctAdvance, CT_T.reveal);
+  }
+
+  function ctAdvance() {
+    if (ctStopped) return;
+    ctIdx++;
+    if (ctIdx >= ctProg.chords.length) {
+      ctIdx = 0;
+      ctLoopN++;
+      if (ctLoopN >= ctProg.loops) { ctFinish(); return; }
+    }
+    ctPhaseChord();
+  }
+
+  function ctFinish() {
+    var e = ctEls();
+    ctState = "done";
+    ctListening = false;
+    if (e) {
+      e.phase.textContent = "Done!";
+      e.chord.textContent = "✓";
+      e.target.innerHTML = "Nice work — tap ▶ Start to go again.";
+      if (ctGrading && ctScore.asked) {
+        var pct = Math.round(100 * ctScore.hits / ctScore.asked);
+        e.verdict.className = "cp-verdict " + (pct >= 60 ? "hit" : "near");
+        e.verdict.textContent = "You landed " + ctScore.hits + " of " + ctScore.asked + " (" + pct + "%) · best streak " + ctScore.best;
+      }
+    }
+    stopChordTrainer();
+    playChime();
+  }
+
+  function ctBeginRun() {
+    ctStopped = false;
+    ctIdx = 0;
+    ctLoopN = 0;
+    var e = ctEls();
+    if (e && e.start) { e.start.textContent = "■ Stop"; e.start.classList.add("playing"); }
+    // iOS (and any tab without a prior gesture) can leave the context suspended.
+    // Prefer starting once resume() settles, but never *depend* on it — a promise that
+    // never settles would leave the button stuck on "Stop" with no sound and no message.
+    var started = false;
+    function go() {
+      if (started || ctStopped) return;
+      started = true;
+      ctPhaseChord();
+    }
+    var ctx = getToneCtx();
+    if (ctx.state !== "running" && ctx.resume) {
+      try {
+        ctx.resume().then(go, go);
+        setTimeout(go, 250);   // fallback: start anyway
+        return;
+      } catch (err) {}
+    }
+    go();
+  }
+
+  function ctStart(progId, opts) {
+    opts = opts || {};
+    stopOtherAudio();
+    var prog = null;
+    for (var i = 0; i < PROGRESSIONS.length; i++) if (PROGRESSIONS[i].id === progId) prog = PROGRESSIONS[i];
+    if (!prog) return;
+    ctProg = prog;
+    if (opts.targetMode) ctTargetMode = opts.targetMode;
+    if (opts.grading != null) ctGrading = opts.grading;
+    ctScore = { asked: 0, hits: 0, streak: 0, best: 0 };
+    var e = ctEls();
+    if (e) {
+      var cards = e.box.querySelectorAll(".cp-prog");
+      for (var j = 0; j < cards.length; j++) cards[j].classList.toggle("active", cards[j].dataset.prog === progId);
+      if (e.score) e.score.textContent = "";
+      if (e.status) { e.status.className = "cp-status status"; e.status.textContent = ""; }
+    }
+    if (!ctGrading) { ctBeginRun(); return; }
+    // grading on — take the mic first, but never fall back to the range-test error screen
+    if (e && e.status) { e.status.className = "cp-status status"; e.status.textContent = "Requesting microphone…"; }
+    startMic(function () {
+      ctOwnsMic = true;
+      if (e && e.status) e.status.textContent = "";
+      if (ctStopped === false) return;   // already running somehow — don't double-start
+      ctBeginRun();
+    }, e ? e.status : document.createElement("div"), {
+      consumer: ctFrame,
+      onError: function (err, msg) {
+        ctGrading = false;
+        ctOwnsMic = false;
+        var e2 = ctEls();
+        if (e2) {
+          if (e2.status) { e2.status.className = "cp-status status error"; e2.status.textContent = msg + " — running without grading."; }
+          var gt = e2.box.querySelector(".cp-gradetoggle");
+          if (gt) { gt.classList.remove("on"); var gl = gt.querySelector(".grade-lbl"); if (gl) gl.textContent = "Grade me 🎤"; }
+        }
+        ctBeginRun();   // play-only still works
+      }
+    });
+  }
+
+  function buildChordTrainer() {
+    var box = $("chordTrainer");
+    if (!box) return;
+    stopChordTrainer();
+    var r = getComfyRange();
+    var key = ctKeyRoot(r);
+    ctKey = key.pc;
+
+    box.innerHTML = "";
+    var card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML =
+      "<p class='cp-desc'>A chord plays, then it goes quiet — <b>sing the chord tone it asks for</b>, and the answer plays back so you can check yourself. This is how you learn to find your note inside real music." +
+      (r ? " Everything is transposed into <b>your</b> comfy range." : " Do the range test and this will fit your voice.") + "</p>";
+
+    // progression chooser
+    var grid = document.createElement("div");
+    grid.className = "cp-grid";
+    PROGRESSIONS.forEach(function (p) {
+      var b = document.createElement("button");
+      b.className = "cp-prog";
+      b.dataset.prog = p.id;
+      b.innerHTML = "<span class='cp-prog-name'>" + p.name + "</span><span class='cp-prog-tag'>" + p.tag + "</span>";
+      b.title = p.desc;
+      grid.appendChild(b);
+    });
+    card.appendChild(grid);
+
+    // target-tone chooser
+    var modes = document.createElement("div");
+    modes.className = "cp-modes";
+    CT_TARGET_MODES.forEach(function (m) {
+      var b = document.createElement("button");
+      b.className = "cp-mode" + (m.id === ctTargetMode ? " on" : "");
+      b.dataset.mode = m.id;
+      b.textContent = m.lbl;
+      modes.appendChild(b);
+    });
+    card.appendChild(modes);
+
+    // grading toggle + warning
+    var row = document.createElement("div");
+    row.className = "cp-toprow";
+    var grade = document.createElement("div");
+    grade.className = "pill-toggle cp-gradetoggle" + (ctGrading ? " on" : "");
+    grade.innerHTML = "<span class='pip'></span><span class='grade-lbl'>Grade me 🎤</span>";
+    row.appendChild(grade);
+    card.appendChild(row);
+
+    var warn = document.createElement("div");
+    warn.className = "cp-warn" + (ctBleedWarned ? " loud" : "");
+    warn.style.display = ctGrading ? "block" : "none";
+    warn.innerHTML = ctBleedWarned
+      ? "🔴 I can hear my own speaker — grades will be wrong without headphones."
+      : "🎧 Headphones strongly recommended — otherwise I'll hear the chord instead of you.";
+    card.appendChild(warn);
+
+    // stage
+    var stage = document.createElement("div");
+    stage.className = "cp-stage";
+    stage.innerHTML =
+      "<div class='cp-dots'></div>" +
+      "<div class='cp-chord'>—</div>" +
+      "<div class='cp-target'>Pick a progression to begin.</div>" +
+      "<div class='cp-listen-bar'><div class='cp-listen-fill'></div></div>" +
+      "<div class='cp-phase'></div>" +
+      "<div class='cp-verdict'></div>" +
+      "<div class='cp-score'></div>";
+    card.appendChild(stage);
+
+    var controls = document.createElement("div");
+    controls.className = "cp-controls";
+    var startBtn = document.createElement("button");
+    startBtn.className = "play-btn cp-start";
+    startBtn.textContent = "▶ Start";
+    controls.appendChild(startBtn);
+    card.appendChild(controls);
+
+    var status = document.createElement("div");
+    status.className = "cp-status status";
+    card.appendChild(status);
+
+    box.appendChild(card);
+
+    // ---- wiring ----
+    var progBtns = grid.querySelectorAll(".cp-prog");
+    for (var i = 0; i < progBtns.length; i++) {
+      (function (b) {
+        b.addEventListener("click", function () {
+          var id = b.dataset.prog;
+          var running = !ctStopped && ctProg && ctProg.id === id;
+          stopChordTrainer();
+          if (running) return;             // tapping the lit progression stops it
+          ctStart(id);
+        });
+      })(progBtns[i]);
+    }
+    var modeBtns = modes.querySelectorAll(".cp-mode");
+    for (var m = 0; m < modeBtns.length; m++) {
+      (function (b) {
+        b.addEventListener("click", function () {
+          ctTargetMode = b.dataset.mode;
+          for (var k = 0; k < modeBtns.length; k++) modeBtns[k].classList.toggle("on", modeBtns[k] === b);
+        });
+      })(modeBtns[m]);
+    }
+    grade.addEventListener("click", function () {
+      ctGrading = !ctGrading;
+      grade.classList.toggle("on", ctGrading);
+      warn.style.display = ctGrading ? "block" : "none";
+      stopChordTrainer();
+    });
+    startBtn.addEventListener("click", function () {
+      if (!ctStopped) { stopChordTrainer(); return; }
+      ctStart(ctProg ? ctProg.id : PROGRESSIONS[0].id);
+    });
   }
 
   function updateWarmupBanner() {
@@ -1598,13 +2473,19 @@
       b.innerHTML = "Do the range test first and these exercises will automatically fit <b>your</b> voice.";
     }
     buildExercises();        // rebuild so starting notes pick up the new range
+    buildChordTrainer();     // progressions retranspose into the new range
     buildIntervalTrainer();  // ear-training section retunes to the same range
   }
 
   // ================= boot =================
   renderSaved();
   updateWarmupBanner();
-  window.addEventListener("pagehide", function () { stopMic(); stopIntervals(); });
+  window.addEventListener("pagehide", function () { stopMic(); stopOtherAudio(); });
+  // rAF halts when hidden but setTimeout/Web Audio keep going — the chord trainer would
+  // desync badly and "listen" windows would elapse with zero samples. Stop cleanly instead.
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) stopOtherAudio();
+  });
 
   // hooks for automated verification
   window.Pipes = {
@@ -1624,7 +2505,55 @@
     _intervalPlaying: function () { return intervalCtl != null; },
     _setRms: function (v) { lastRms = v; },
     _playingId: function () { return playing ? playing.id : null; },
-    INTERVALS: INTERVALS
+    INTERVALS: INTERVALS,
+
+    // --- mic seam ---
+    _micConsumer: function () { return micConsumer; },
+    _setMicConsumer: function (fn) { micConsumer = fn; },
+    _micErrorMessage: micErrorMessage,
+
+    // --- audio ---
+    _playChord: playChord,
+
+    // --- chord trainer ---
+    PROGRESSIONS: PROGRESSIONS,
+    CHORD_TONES: CHORD_TONES,
+    _ctSetTimings: function (o) { for (var k in o) if (CT_T[k] != null) CT_T[k] = o[k]; },
+    _ctStart: ctStart,
+    _ctStop: stopChordTrainer,
+    _ctState: function () {
+      return { state: ctState, idx: ctIdx, loop: ctLoopN, key: ctKey, prog: ctProg ? ctProg.id : null,
+               target: ctTarget, grading: ctGrading, listening: ctListening, ownsMic: ctOwnsMic };
+    },
+    _ctSetListening: function (v) { ctListening = v; },
+    _ctFeed: function (freq, now) { ctFrame(freq, now); },
+    _ctGrade: function () { return ctGrade(); },
+    _ctLastVerdict: function () { return ctLastVerdict; },
+    _ctScore: function () { return ctScore; },
+    _snapToRange: snapToRange,
+    _ctKeyRoot: ctKeyRoot,
+    _ctChordMidis: ctChordMidis,
+
+    // --- interval trainer ---
+    _ivModes: function () {
+      return { repeat: ivRepeat, descending: ivDescending, harmonic: ivHarmonic, root: ivRoot, quiz: ivQuiz };
+    },
+    _ivSetModes: function (o) {
+      if (o.descending != null) ivDescending = o.descending;
+      if (o.harmonic != null) ivHarmonic = o.harmonic;
+      if (o.repeat != null) ivRepeat = o.repeat;
+      if (o.root != null) ivRoot = o.root;
+      buildIntervalTrainer();
+    },
+    _ivQuizStart: function () { if (ivQuizApi) ivQuizApi.start(); },
+    _ivQuizStop: function () { if (ivQuizApi) ivQuizApi.stop(); },
+    _ivQuizForce: function (semi) { if (ivQuizApi) ivQuizApi.ask(semi); },
+    _ivQuizAnswer: function (semi) { if (ivQuizApi) ivQuizApi.answer(semi); },
+    _ivQuizState: function () {
+      return { state: ivQuizState, semi: ivQuizSemi, root: ivQuizRoot, score: ivQuizScore,
+               descending: ivQuizDesc, harmonic: ivHarmonic };
+    },
+    _playIntervalOnce: playIntervalOnce
   };
 })();
 </script>
